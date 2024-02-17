@@ -79,9 +79,13 @@ public class Database {
         if(table == null)return ret;
         Connection connection = getConnection();
         DatabaseMetaData metadata = connection.getMetaData();
+        metadata.getPrimaryKeys(null, null, table);
+        ResultSet r = metadata.getPrimaryKeys(null, null, table);
+        String pk = "";
+        if(r.next()) pk = r.getString("COLUMN_NAME");
         ResultSet rs = metadata.getColumns(null, null, table, null);
         while(rs.next()){
-            ret.add(new Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME")));
+            ret.add(new Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME"), rs.getInt("NULLABLE")));
         }
         return ret;
     }
@@ -90,14 +94,14 @@ public class Database {
 
     }
 
-    // public static void main(String[] args) {
-    //     Database d = new Database();
-    //     try {
-    //         d.getTableColumns("test");
-    //     } catch (SQLException e) {
-    //         e.printStackTrace();
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     }
-    // }
+    public static void main(String[] args) {
+        Database d = new Database();
+        try {
+            d.getTableColumns("test");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

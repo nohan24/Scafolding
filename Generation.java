@@ -12,6 +12,10 @@ import java.nio.file.Files;
 
 public class Generation {
     private static Database database = new Database();
+    private static String tableName = null;
+    private static String className = null;
+    private static boolean action;
+    private static String pckg = null;
 
     private static void generateModel(String className, String packageName, String table, boolean isCrud){
 
@@ -33,9 +37,14 @@ public class Generation {
                 attribut += "\n".concat(c.getGetset()).concat("\t\t");
             }
 
+            if(isCrud){
+                crudFunction = CrudFunction();
+            }
+
             String modelFile = Files.readString(path);
             modelFile = modelFile.replace("#packageName#", namespace);
-            modelFile = modelFile.replace("#className#", capitalize(className));
+            if(isCrud)modelFile = modelFile.replace("#className#", capitalize(tableName));
+            else modelFile = modelFile.replace("#className#", capitalize(className));
             modelFile = modelFile.replace("#getset#", attribut);
             modelFile = modelFile.replace("#crud#", crudFunction);
             writer.println(modelFile);
@@ -48,8 +57,8 @@ public class Generation {
         }    
     } 
 
-    private static void generateCrud(){
-
+    private static void generateCrud(String className, String packageName, String table, boolean isCrud){
+        generateModel(null, packageName, table, true);
     }
 
     static String capitalize(String input){
@@ -71,11 +80,51 @@ public class Generation {
 
     }
 
+    private static String CrudFunction(){
+        String create = "";
+        String update = "";
+        String delete = "";
+        String list = "";
+        String ret = "";
+
+        ret = ret.concat(create.concat("\n\t\t")).concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t");
+        return ret;
+    }
+
     public static void main(String[] args) {
-        generateModel("Test", "test", null, false);
-        generateController();
-        generateCrud();
-        generateView();
+        String[] ss;
+        for(String arg: args){
+            ss = arg.split(":");
+            if(ss[0].equals("make")){
+                if(ss[1].equals("crud")) action = true;
+                continue;
+            }
+            if(ss[0].equals("table")){
+                tableName = ss[1];
+                continue;
+            }
+            if(ss[0].equals("class")){
+                className = capitalize(ss[1]);
+                continue;
+            }
+            if(ss[0].equals("namespace")){
+                pckg = ss[1];
+            }
+        }
+
+        if(action){
+            if(tableName == null)System.out.println("Veuillez préciser la table dans la base de données !");
+            else{
+                generateCrud(null, pckg, tableName, true);
+            }
+        }else{
+            if(className == null) System.out.println("Veuillez préciser le nom de la classe !");
+            else if(tableName == null)System.out.println("Veuillez préciser la table dans la base de données !");
+            else{
+                generateModel("Test", pckg, tableName, false);
+            }
+        }
+        
     }
 
     

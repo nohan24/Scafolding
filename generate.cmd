@@ -1,26 +1,18 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set "file=%1"
-
-for /f "tokens=1,* delims=." %%a in ("!file!") do (
-    set "filename=%%a"
-    set "extension=%%b"
-)
-
 set "concatenation="
 
 :concatenate
-if not "%2"=="" (
-    set "concatenation=!concatenation! %2"
+if not "%1"=="" (
+    set "concatenation=!concatenation! %1"
     shift
     goto :concatenate
 )
 
-set "concatenation=!concatenation! extension:!extension!"
 
-java Moteur.java %filename% %concatenation%
+java Generation.java %concatenation%
 
 endlocal
 
-@REM table:nomtable , type:(controller/controller_spring), package:nompackage
+@REM table:nomtable , make:(model/crud), namespace:package, class:nom_classe
