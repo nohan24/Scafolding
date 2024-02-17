@@ -1,8 +1,8 @@
-namespace #packageName#;
+namespace #packageName#{
 
-public class #className# {
-   public #className#(){}
-#attributs#
-#getters#
-#setters#
+   public class #className# {
+
+      public #className#(){}
+      #getset##crud#
+   }
 }

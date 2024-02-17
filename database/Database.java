@@ -76,6 +76,7 @@ public class Database {
 
     public List<Column> getTableColumns(String table) throws SQLException, IOException{
         List<Column> ret = new ArrayList<>();
+        if(table == null)return ret;
         Connection connection = getConnection();
         DatabaseMetaData metadata = connection.getMetaData();
         ResultSet rs = metadata.getColumns(null, null, table, null);
