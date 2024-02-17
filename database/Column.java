@@ -9,14 +9,12 @@ import java.util.regex.Pattern;
 public class Column {
     private String column;
     private String type;
-    private String setters;
-    private String getters;
+    private String getset;
     private Path mdl = Paths.get("model/cs.mdl");
 
     public Column(String column, String type) throws IOException{
         setColumn(column);
-        setSetters("set" + capitalize(column));
-        setGetters("get" + capitalize(column));
+        setGetset("public string ".concat(capitalize(column).concat(" { get; set; }")));
         for(String s : Files.readAllLines(mdl)){
             String[] splitage = s.split("=>");
             if(Pattern.matches("^" + splitage[0] + ".*", type)){
@@ -45,19 +43,12 @@ public class Column {
     }
     public void setType(String type) {
         this.type = type;
+    }  
+    public String getGetset() {
+        return getset;
     }
-    public String getSetters() {
-        return setters;
+    public void setGetset(String getset) {
+        this.getset = getset;
     }
-    public void setSetters(String setters) {
-        this.setters = setters;
-    }
-    public String getGetters() {
-        return getters;
-    }
-    public void setGetters(String getters) {
-        this.getters = getters;
-    }
-
 
 }

@@ -1,7 +1,10 @@
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import database.Database;
+
 public class Generation {
+    private Database database = new Database();
 
     private void generateModel(String className, String packageName, String table){
         Path path = Paths.get("model/model.tpl");
