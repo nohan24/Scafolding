@@ -6,51 +6,46 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.List;
-
 import database.Column;
 import database.Database;
+import java.nio.file.Files;
 
 public class Generation {
     private static Database database = new Database();
 
-    private static void generateModel(String className, String packageName, String table){
-        // template anle modele
+    private static void generateModel(String className, String packageName, String table, boolean isCrud){
+
         Path path = Paths.get("model/model.tpl");
         String namespace = getProjectName().concat(".Models");
-        if(!packageName.equals(null))namespace.concat(".".concat(packageName));
+        if(packageName != null)namespace.concat(".".concat(packageName));
         String fileName = packageName != null ? "Models/".concat(packageName).concat("/").concat(capitalize(className)).replace('.', '/') : "Models/".concat(capitalize(className));
-        File directory = new File((fileName + ".cs").replace('/', '\\'));
-        // jerena raha efa misy
-        if(directory.exists()){
-            System.out.println(namespace.concat("." + className + ".cs").concat(" existe déjà !"));
-        }else{
-            try {
-                // mamorona anle dossier anle package
+        try {
+            if(packageName != null){
                 File dir = new File("Models/".concat(packageName).replace('.', '/'));
                 dir.mkdirs();
-                PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat(".cs")));
-                String attribut = "";
-                List<Column> columns = database.getTableColumns(table);
-                // mampiditra anle getter setter sy ny attributs
-                for(Column c : columns){
-                    attribut += "\t\t".concat(c.getGetset()).concat("\n");
-                }
-
-                // micree fonction crud raha précisena ny table 
-
-                // generena ny controller mifanaraka raha make:crud
-
-                // manamboatra ny package controller raha misy
-
-                // generena ny view apres controller
-
-                // manamboatra package view raha misy
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
-        }
+            PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat(".cs")));
+            String attribut = "";
+            String crudFunction = "";
+
+            List<Column> columns = database.getTableColumns(table);
+            for(Column c : columns){
+                attribut += "\n".concat(c.getGetset()).concat("\t\t");
+            }
+
+            String modelFile = Files.readString(path);
+            modelFile = modelFile.replace("#packageName#", namespace);
+            modelFile = modelFile.replace("#className#", capitalize(className));
+            modelFile = modelFile.replace("#getset#", attribut);
+            modelFile = modelFile.replace("#crud#", crudFunction);
+            writer.println(modelFile);
+            writer.close();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }    
     } 
 
     private static void generateCrud(){
@@ -77,7 +72,7 @@ public class Generation {
     }
 
     public static void main(String[] args) {
-        generateModel("Test", "ff", "test");
+        generateModel("Test", "test", null, false);
         generateController();
         generateCrud();
         generateView();
