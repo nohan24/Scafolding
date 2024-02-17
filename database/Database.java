@@ -86,17 +86,17 @@ public class Database {
     }
 
     void getForeignKey(){
-        
+
     }
 
-    public static void main(String[] args) {
-        Database d = new Database();
-        try {
-            d.getTableColumns("test");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    // public static void main(String[] args) {
+    //     Database d = new Database();
+    //     try {
+    //         d.getTableColumns("test");
+    //     } catch (SQLException e) {
+    //         e.printStackTrace();
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //     }
+    // }
 }
