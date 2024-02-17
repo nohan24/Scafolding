@@ -1,7 +1,10 @@
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class Generation {
 
-    private void generateModel(){
-
+    private void generateModel(String className, String packageName, String table){
+        Path path = Paths.get("model/model.tpl");
     }
 
     private void generateCrud(){
@@ -18,6 +21,10 @@ public class Generation {
 
     private void generateController(){
 
+    }
+
+    public static void main(String[] args) {
+        
     }
 
     
