@@ -80,7 +80,7 @@ public class Database {
         DatabaseMetaData metadata = connection.getMetaData();
         ResultSet rs = metadata.getColumns(null, null, table, null);
         while(rs.next()){
-            ret.add(new Column(rs.getString("COLUMN_NAME "), rs.getString("TYPE_NAME")));
+            ret.add(new Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME")));
         }
         return ret;
     }

@@ -21,7 +21,6 @@ public class Column {
             String[] splitage = s.split("=>");
             if(Pattern.matches("^" + splitage[0] + ".*", type)){
                 setType(splitage[1]);            
-                System.out.println(splitage[1]);            
             }
         }
     }
