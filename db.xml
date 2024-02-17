@@ -1,0 +1,5 @@
+<root>
+    <user>postgres</user>
+    <password>root</password>
+    <connectionString>jdbc:postgresql://localhost:5432/scafolding</connectionString>
+</root>
