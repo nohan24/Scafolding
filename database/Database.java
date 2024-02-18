@@ -79,25 +79,34 @@ public class Database {
         if(table == null)return ret;
         Connection connection = getConnection();
         DatabaseMetaData metadata = connection.getMetaData();
+        metadata.getPrimaryKeys(null, null, table);
+        ResultSet r = metadata.getPrimaryKeys(null, null, table);
+        ResultSet fk = metadata.getImportedKeys(null, null, table);
+        String pk = "";
+        if(r.next()) pk = r.getString("COLUMN_NAME");
         ResultSet rs = metadata.getColumns(null, null, table, null);
         while(rs.next()){
-            ret.add(new Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME")));
+            var primarykey = rs.getString("COLUMN_NAME") == pk;
+            var default_v = rs.getString("COLUMN_DEF");
+            var col = new Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME"), rs.getInt("NULLABLE"), primarykey, default_v);
+            
+            ret.add(col);
         }
         return ret;
     }
 
     void getForeignKey(){
-
+        
     }
 
-    // public static void main(String[] args) {
-    //     Database d = new Database();
-    //     try {
-    //         d.getTableColumns("test");
-    //     } catch (SQLException e) {
-    //         e.printStackTrace();
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     }
-    // }
+    public static void main(String[] args) {
+        Database d = new Database();
+        try {
+            d.getTableColumns("test");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
