@@ -80,13 +80,23 @@ public class Generation {
             }
             PrintWriter writer = new PrintWriter(new FileWriter("liste".concat(fileName).concat(".cshtml")));
             String headerColumns = "";
-            String rowColumns = ""; // MBOLA mila atao
+            String rowColumns = "";
 
             List<Column> columns = database.getTableColumns(table);
+            String idModel = "Id";
             for(Column c : columns){
-                headerColumns += "\n".concat("<th>").concat(c.getName()).concat("</th>").concat("\t\t");
+                if (!c.isPrimaryKey()) {
+                    headerColumns += "\n".concat("<th>").concat(c.getName()).concat("</th>").concat("\t\t");
+                    rowColumns += "\n".concat("<td>").concat("@item.").concat(c.getName()).concat("</td>").concat("\t\t");
+                }else{
+                    idModel = c.getName();
+                }
             }
             headerColumns += "\n <th>Actions</th> \t\t";
+            rowColumns += "\n<td>\n";
+            rowColumns += "\t\t<a asp-action=\"Edit\" asp-route-id=\"@item."+idModel+"\">Modifier</a> \n";
+            rowColumns += "\t\t<a asp-action=\"Delete\" asp-route-id=\"@item."idModel"\"\">Supprimer</a>\n";
+            rowColumns += "</td>\n";
 
             String viewFile = Files.readString(path);
             viewFile = viewFile.replace("#modelName#", modelName);
@@ -119,11 +129,13 @@ public class Generation {
 
             List<Column> columns = database.getTableColumns(table);
             for(Column c : columns){
-                champs += "\n".concat("<div class=\"form-group\">").concat("\t\t");
-                champs += "\n".concat("<label asp-for=\"").concat(c.getName()).concat("\" class=\"control-label\">").concat(c.getName()).concat(" : \t\t\t");
-                champs += "\n".concat("<input asp-for=\"").concat(c.getName()).concat("\" class=\"form-control\" />").concat("\t\t\t");
-                champs += "\n".concat("<span asp-validation-for=\"").concat(c.getName()).concat("\" class=\"text-danger\"></span>").concat("\t\t\t");
-                champs += "\n".concat("</div>").concat("\t\t");
+                if (!c.isPrimaryKey()) {
+                    champs += "\n".concat("<div class=\"form-group\">").concat("\t\t");
+                    champs += "\n".concat("<label asp-for=\"").concat(c.getName()).concat("\" class=\"control-label\">").concat(c.getName()).concat(" : \t\t\t");
+                    champs += "\n".concat("<input asp-for=\"").concat(c.getName()).concat("\" class=\"form-control\" />").concat("\t\t\t");
+                    champs += "\n".concat("<span asp-validation-for=\"").concat(c.getName()).concat("\" class=\"text-danger\"></span>").concat("\t\t\t");
+                    champs += "\n".concat("</div>").concat("\t\t");
+                }
             }
 
             String viewFile = Files.readString(path);
