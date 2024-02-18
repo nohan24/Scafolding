@@ -214,7 +214,7 @@ public class Generation {
         }
         String list = all(table, columns);
         String update = "";
-        String create = "";
+        String create = create(table, columns);
         String ret = "";
 
         ret = ret.concat(create.concat("\n\t\t")).concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t");
@@ -225,10 +225,10 @@ public class Generation {
         String ret = "";
         ret = ret + "public List<"+capitalize(capitalize(table))+"> getAll() { \n"
         .concat("\t\t\tList<"+capitalize(capitalize(table))+"> listA= new List<"+capitalize(capitalize(table))+">();\n")
-        .concat("\t\t\tString connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding; \n")
+        .concat("\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding; \n")
         .concat("\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n")
         .concat("\t\t\t\tconnection.Open();\n")
-        .concat("\t\t\t\tString sql = \"select * from "+ table +"\"; \n")
+        .concat("\t\t\t\tstring sql = \"select * from "+ table +"\"; \n")
         .concat("\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n")
         .concat("\t\t\t\t\tusing (NpgsqlDataReader reader = command.ExecuteReader()) {\n")
         .concat("\t\t\t\t\t\twhile (reader.Read()) {\n")
@@ -267,6 +267,42 @@ public class Generation {
                     "\t\t\t}\n" +
                     "\t\t}\n";
         return deleteCode;
+    }
+
+    static String create(String table, List<Column> columns){
+        var cols = "";
+        var acols = "";
+        for(Column c : columns){
+            if(!c.isPk()){
+                cols = cols + c.getColumn() + " ,";
+                acols = acols + "@" + c.getColumn() + " ,";
+            }
+        }
+
+        cols = cols.substring(0, cols.length() - 1);
+        acols = acols.substring(0, acols.length() - 1);
+        String insertCode = "\t\tpublic void insert() {\n" +
+                    "\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
+                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
+                    "\t\t\t\tconnection.Open();\n" +
+                    "\t\t\t\tstring sql = \"insert into "+table+"("+ cols +") values("+ acols +")\";\n" +
+                    "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n";
+                    for(Column c : columns){
+                        if(!c.isPk()){
+                            if(c.getType().equals("string")){
+                                insertCode = insertCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", " + "".concat("\"'\"+") + "this".concat(capitalize(c.getColumn())).concat("+\"'\"").concat(");\n");
+                            }else{
+                                insertCode = insertCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
+                            }
+                        }
+                    }
+                insertCode = insertCode +
+                    "\t\t\t\t\tcommand.ExecuteNonQuery();\n" +
+                    "\t\t\t\t}\n" +
+                    "\t\t\t\tconnection.Close();\n" +
+                    "\t\t\t}\n" +
+                    "\t\t}\n";
+        return insertCode;
     }
 
     public static void main(String[] args) {

@@ -9,6 +9,20 @@ namespace Scafolding.Models{
 		public string Argent { get; set; }		
 		public string Id_dept { get; set; }		
 
+		public void insert() {
+			string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
+			using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
+				connection.Open();
+				string sql = "insert into test(nom ,argent ,id_dept ) values(@nom ,@argent ,@id_dept )";
+				using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
+					command.Parameters.AddWithValue("@nom", "'"+thisNom+"'");
+					command.Parameters.AddWithValue("@argent", this.Argent);
+					command.Parameters.AddWithValue("@id_dept", this.Id_dept);
+					command.ExecuteNonQuery();
+				}
+				connection.Close();
+			}
+		}
 
 		
 		public void delete(int id) {
@@ -26,10 +40,10 @@ namespace Scafolding.Models{
 
 		public List<Test> getAll() { 
 			List<Test> listA= new List<Test>();
-			String connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding; 
+			string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding; 
 			using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 				connection.Open();
-				String sql = "select * from test"; 
+				string sql = "select * from test"; 
 				using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
 					using (NpgsqlDataReader reader = command.ExecuteReader()) {
 						while (reader.Read()) {
@@ -38,7 +52,7 @@ namespace Scafolding.Models{
 							obj.Nom = reader.Get(nom); 
 							obj.Argent = reader.Get(argent); 
 							obj.Id_dept = reader.Get(id_dept); 
-							list.add(obj); 
+							listA.add(obj); 
  						} 
  					} 
  				}
@@ -46,8 +60,6 @@ namespace Scafolding.Models{
  			} 
 			return listA; 
  		} 
-
-		
 
  
 		
