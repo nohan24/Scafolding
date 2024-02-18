@@ -249,7 +249,7 @@ public class Generation {
             ret = ret + "\t\t\t\t\t\t\tobj." + capitalize(c.getColumn()) + " = reader.Get"+s+"("+c.getColumn()+"); \n";
         }
 
-        ret = ret + "\t\t\t\t\t\t\tlist.add(obj); \n \t\t\t\t\t\t} \n \t\t\t\t\t} \n \t\t\t\t}\n\t\t\t\tconnection.Close(); \n \t\t\t} \n\t\t\treturn listA; \n \t\t} \n\n ";
+        ret = ret + "\t\t\t\t\t\t\tlistA.add(obj); \n \t\t\t\t\t\t} \n \t\t\t\t\t} \n \t\t\t\t}\n\t\t\t\tconnection.Close(); \n \t\t\t} \n\t\t\treturn listA; \n \t\t} \n\n ";
         return ret;
     }
 
