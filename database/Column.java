@@ -16,7 +16,7 @@ public class Column {
     private String defaultValue;
 
 
-    public Column(String column, String type, int nullable) throws IOException{
+    public Column(String column, String type, int nullable, boolean pk, String defaultv) throws IOException{
         setColumn(column);
         setGetset("public string ".concat(capitalize(column).concat(" { get; set; }")));
         for(String s : Files.readAllLines(mdl)){
@@ -26,6 +26,8 @@ public class Column {
             }
         }
         setNullable(nullable);
+        setPk(pk);
+        setDefaultValue(defaultv);
     }
 
     String capitalize(String input){
