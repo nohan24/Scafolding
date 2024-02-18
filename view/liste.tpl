@@ -1,6 +1,6 @@
 @model #modelName#
 
-<h1>#ViewTitle#:</h1>
+<h1>Liste #modelName#</h1>
 
 <table class="table">
     <thead>
