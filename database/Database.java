@@ -88,13 +88,15 @@ public class Database {
         while(rs.next()){
             var primarykey = rs.getString("COLUMN_NAME") == pk;
             var default_v = rs.getString("COLUMN_DEF");
-            ret.add(new Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME"), rs.getInt("NULLABLE"), primarykey, default_v));
+            var col = new Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME"), rs.getInt("NULLABLE"), primarykey, default_v);
+            
+            ret.add(col);
         }
         return ret;
     }
 
     void getForeignKey(){
-
+        
     }
 
     public static void main(String[] args) {

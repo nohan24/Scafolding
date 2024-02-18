@@ -14,7 +14,8 @@ public class Column {
     private boolean isPk;
     private int nullable;
     private String defaultValue;
-
+    private boolean isFk;
+    private String fk_table;
 
     public Column(String column, String type, int nullable, boolean pk, String defaultv) throws IOException{
         setColumn(column);
@@ -55,6 +56,13 @@ public class Column {
 
     public void setNullable(int nullable) {
         this.nullable = nullable;
+    }
+    public boolean isFk() {
+        return isFk;
+    }
+
+    public void setFk(boolean isFk) {
+        this.isFk = isFk;
     }
 
     public String getColumn() {
