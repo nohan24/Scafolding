@@ -1,4 +1,4 @@
-@model #modelName#
+@model List<#modelName#>
 
 <h1>Liste #modelName#</h1>
 
