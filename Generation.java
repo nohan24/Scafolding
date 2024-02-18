@@ -13,16 +13,15 @@ import java.nio.file.Files;
 public class Generation {
     private static Database database = new Database();
     private static String tableName = null;
-    private static String className = null;
     private static boolean action;
     private static String pckg = null;
 
-    private static void generateModel(String className, String packageName, String table, boolean isCrud){
+    private static void generateModel(String packageName, String table, boolean isCrud){
 
         Path path = Paths.get("model/model.tpl");
         String namespace = getProjectName().concat(".Models");
         if(packageName != null)namespace.concat(".".concat(packageName));
-        String fileName = packageName != null ? "Models/".concat(packageName).concat("/").concat(capitalize(className)).replace('.', '/') : "Models/".concat(capitalize(className));
+        String fileName = packageName != null ? "Models/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Models/".concat(capitalize(table));
         try {
             if(packageName != null){
                 File dir = new File("Models/".concat(packageName).replace('.', '/'));
@@ -30,22 +29,22 @@ public class Generation {
             }
             PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat(".cs")));
             String attribut = "";
-            String crudFunction = "";
+            String crudFunction = "dfdf";
 
             List<Column> columns = database.getTableColumns(table);
             for(Column c : columns){
-                attribut += "\n".concat(c.getGetset()).concat("\t\t");
+                attribut += "\n\t\t".concat(c.getGetset()).concat("\t\t");
             }
 
             if(isCrud){
-                crudFunction = CrudFunction();
+                crudFunction = CrudFunction(table, columns);
             }
 
             String modelFile = Files.readString(path);
             modelFile = modelFile.replace("#packageName#", namespace);
             if(isCrud)modelFile = modelFile.replace("#className#", capitalize(tableName));
-            else modelFile = modelFile.replace("#className#", capitalize(className));
-            modelFile = modelFile.replace("#getset#", attribut);
+            else modelFile = modelFile.replace("#className#", capitalize(table));
+            modelFile = modelFile.replace("#getset#", attribut.concat("\n\n"));
             modelFile = modelFile.replace("#crud#", crudFunction);
             writer.println(modelFile);
             writer.close();
@@ -57,8 +56,8 @@ public class Generation {
         }    
     } 
 
-    private static void generateCrud(String className, String packageName, String table, boolean isCrud){
-        generateModel(null, packageName, table, true);
+    private static void generateCrud(String packageName, String table, boolean isCrud){
+        generateModel(packageName, table, true);
     }
 
     static String capitalize(String input){
@@ -76,12 +75,12 @@ public class Generation {
 
     }
 
-    private static void generateViewListe(String modelName, String packageName){
+    private static void generateViewListe(String table, String packageName){
 
         Path path = Paths.get("view/liste.tpl");
         String namespace = getProjectName().concat(".Views");
         if(packageName != null)namespace.concat(".".concat(packageName));
-        String fileName = packageName != null ? "Views/".concat(packageName).concat("/").concat(capitalize(modelName)).replace('.', '/') : "Views/".concat(capitalize(modelName));
+        String fileName = packageName != null ? "Views/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Views/".concat(capitalize(table));
         try {
             if(packageName != null){
                 File dir = new File("Views/".concat(packageName).replace('.', '/'));
@@ -94,21 +93,21 @@ public class Generation {
             List<Column> columns = database.getTableColumns(table);
             String idModel = "Id";
             for(Column c : columns){
-                if (!c.isPrimaryKey()) {
-                    headerColumns += "\n".concat("<th>").concat(c.getName()).concat("</th>").concat("\t\t");
-                    rowColumns += "\n".concat("<td>").concat("@item.").concat(c.getName()).concat("</td>").concat("\t\t");
+                if (!c.isPk()) {
+                    headerColumns += "\n".concat("<th>").concat(c.getColumn()).concat("</th>").concat("\t\t");
+                    //rowColumns += "\n".concat("<td>").concat("@item.").concat(c.getValue()).concat("</td>").concat("\t\t");
                 }else{
-                    idModel = c.getName();
+                    idModel = c.getValue();
                 }
             }
             headerColumns += "\n <th>Actions</th> \t\t";
             rowColumns += "\n<td>\n";
             rowColumns += "\t\t<a asp-action=\"Edit\" asp-route-id=\"@item."+idModel+"\">Modifier</a> \n";
-            rowColumns += "\t\t<a asp-action=\"Delete\" asp-route-id=\"@item."idModel"\"\">Supprimer</a>\n";
+            rowColumns += "\t\t<a asp-action=\"Delete\" asp-route-id=\"@item."+idModel+"\"\">Supprimer</a>\n";
             rowColumns += "</td>\n";
 
             String viewFile = Files.readString(path);
-            viewFile = viewFile.replace("#modelName#", modelName);
+            viewFile = viewFile.replace("#modelName#", table);
             viewFile = viewFile.replace("#HeaderColumns#", headerColumns);
             viewFile = viewFile.replace("#RowColumns#", rowColumns);
             writer.println(viewFile);
@@ -122,12 +121,12 @@ public class Generation {
 
     }
     
-    private static void generateViewCreate(String modelName, String packageName){
+    private static void generateViewCreate(String table, String packageName){
 
         Path path = Paths.get("view/create.tpl");
         String namespace = getProjectName().concat(".Views");
         if(packageName != null)namespace.concat(".".concat(packageName));
-        String fileName = packageName != null ? "Views/".concat(packageName).concat("/").concat(capitalize(modelName)).replace('.', '/') : "Views/".concat(capitalize(modelName));
+        String fileName = packageName != null ? "Views/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Views/".concat(capitalize(table));
         try {
             if(packageName != null){
                 File dir = new File("Views/".concat(packageName).replace('.', '/'));
@@ -138,17 +137,17 @@ public class Generation {
 
             List<Column> columns = database.getTableColumns(table);
             for(Column c : columns){
-                if (!c.isPrimaryKey()) {
+                if (!c.isPk()) {
                     champs += "\n".concat("<div class=\"form-group\">").concat("\t\t");
-                    champs += "\n".concat("<label asp-for=\"").concat(c.getName()).concat("\" class=\"control-label\">").concat(c.getName()).concat(" : \t\t\t");
-                    champs += "\n".concat("<input asp-for=\"").concat(c.getName()).concat("\" class=\"form-control\" />").concat("\t\t\t");
-                    champs += "\n".concat("<span asp-validation-for=\"").concat(c.getName()).concat("\" class=\"text-danger\"></span>").concat("\t\t\t");
+                    champs += "\n".concat("<label asp-for=\"").concat(c.getColumn()).concat("\" class=\"control-label\">").concat(c.getColumn()).concat(" : \t\t\t");
+                    champs += "\n".concat("<input asp-for=\"").concat(c.getColumn()).concat("\" class=\"form-control\" />").concat("\t\t\t");
+                    champs += "\n".concat("<span asp-validation-for=\"").concat(c.getColumn()).concat("\" class=\"text-danger\"></span>").concat("\t\t\t");
                     champs += "\n".concat("</div>").concat("\t\t");
                 }
             }
 
             String viewFile = Files.readString(path);
-            viewFile = viewFile.replace("#modelName#", modelName);
+            viewFile = viewFile.replace("#modelName#", table);
             viewFile = viewFile.replace("#champs#", champs);
             writer.println(viewFile);
             writer.close();
@@ -161,12 +160,12 @@ public class Generation {
 
     }
     
-    private static void generateViewUpdate(String modelName, String packageName){
+    private static void generateViewUpdate(String table, String packageName){
 
         Path path = Paths.get("view/update.tpl");
         String namespace = getProjectName().concat(".Views");
         if(packageName != null)namespace.concat(".".concat(packageName));
-        String fileName = packageName != null ? "Views/".concat(packageName).concat("/").concat(capitalize(modelName)).replace('.', '/') : "Views/".concat(capitalize(modelName));
+        String fileName = packageName != null ? "Views/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Views/".concat(capitalize(table));
         try {
             if(packageName != null){
                 File dir = new File("Views/".concat(packageName).replace('.', '/'));
@@ -177,11 +176,11 @@ public class Generation {
 
             List<Column> columns = database.getTableColumns(table);
             for(Column c : columns){
-                if (!c.isPrimaryKey()) {
+                if (!c.isPk()) {
                     champs += "\n".concat("<div class=\"form-group\">").concat("\t\t");
-                    champs += "\n".concat("<label asp-for=\"").concat(c.getName()).concat("\" class=\"control-label\">").concat(c.getName()).concat(" : \t\t\t");
-                    champs += "\n".concat("<input asp-for=\"").concat(c.getName()).concat("\" class=\"form-control\" />").concat("\t\t\t");
-                    champs += "\n".concat("<span asp-validation-for=\"").concat(c.getName()).concat("\" class=\"text-danger\"></span>").concat("\t\t\t");
+                    champs += "\n".concat("<label asp-for=\"").concat(c.getColumn()).concat("\" class=\"control-label\">").concat(c.getColumn()).concat(" : \t\t\t");
+                    champs += "\n".concat("<input asp-for=\"").concat(c.getColumn()).concat("\" class=\"form-control\" />").concat("\t\t\t");
+                    champs += "\n".concat("<span asp-validation-for=\"").concat(c.getColumn()).concat("\" class=\"text-danger\"></span>").concat("\t\t\t");
                     champs += "\n".concat("</div>").concat("\t\t");
                 }else{
                     champs += "\n".concat("<input type=\"hidden\" asp-for=\"Id\" />").concat("\t\t");
@@ -189,7 +188,7 @@ public class Generation {
             }
 
             String viewFile = Files.readString(path);
-            viewFile = viewFile.replace("#modelName#", modelName);
+            viewFile = viewFile.replace("#modelName#", table);
             viewFile = viewFile.replace("#champs#", champs);
             writer.println(viewFile);
             writer.close();
@@ -205,15 +204,69 @@ public class Generation {
 
     }
 
-    private static String CrudFunction(){
-        String create = "";
-        String update = "";
+    private static String CrudFunction(String table, List<Column> columns){
         String delete = "";
-        String list = "";
+        for(Column c : columns){
+            if(c.isPk()){
+                delete = delete(table, c.getColumn());
+                break;
+            }
+        }
+        String list = all(table, columns);
+        String update = "";
+        String create = "";
         String ret = "";
 
         ret = ret.concat(create.concat("\n\t\t")).concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t");
         return ret;
+    }
+
+    static String all(String table, List<Column> columns){
+        String ret = "";
+        ret = ret + "public List<"+capitalize(capitalize(table))+"> getAll() { \n"
+        .concat("\t\t\tList<"+capitalize(capitalize(table))+"> listA= new List<"+capitalize(capitalize(table))+">();\n")
+        .concat("\t\t\tString connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding; \n")
+        .concat("\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n")
+        .concat("\t\t\t\tconnection.Open();\n")
+        .concat("\t\t\t\tString sql = \"select * from "+ table +"\"; \n")
+        .concat("\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n")
+        .concat("\t\t\t\t\tusing (NpgsqlDataReader reader = command.ExecuteReader()) {\n")
+        .concat("\t\t\t\t\t\twhile (reader.Read()) {\n")
+        .concat("\t\t\t\t\t\t\tvar obj = new "+ capitalize(table) +"();  \n");
+
+        var s = "";
+        for(Column c : columns){
+            if(c.getType() == "string"){
+                s = "String";
+            }else if(c.getType() == "int"){
+                s = "Int32";
+            }else if(c.getType() == "double"){
+                s = "Double";
+            }else if(c.getType() == "DateTime"){
+                s = "DateTime";
+            }
+
+            ret = ret + "\t\t\t\t\t\t\tobj." + capitalize(c.getColumn()) + " = reader.Get"+s+"("+c.getColumn()+"); \n";
+        }
+
+        ret = ret + "\t\t\t\t\t\t\tlist.add(obj); \n \t\t\t\t\t\t} \n \t\t\t\t\t} \n \t\t\t\t}\n\t\t\t\tconnection.Close(); \n \t\t\t} \n\t\t\treturn listA; \n \t\t} \n\n ";
+        return ret;
+    }
+
+    static String delete(String table, String id){
+        String deleteCode = "public void delete(int id) {\n" +
+                    "\t\t\tString connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
+                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
+                    "\t\t\t\tconnection.Open();\n" +
+                    "\t\t\t\tString sql = \"DELETE FROM "+ table +" WHERE "+ id +"=@id\";\n" +
+                    "\t\t\t\tusing(NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n" +
+                    "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@id\", id);\n" +
+                    "\t\t\t\t\tcommand.ExecuteNonQuery();\n" +
+                    "\t\t\t\t}\n" +
+                    "\t\t\t\tconnection.Close();\n" +
+                    "\t\t\t}\n" +
+                    "\t\t}\n";
+        return deleteCode;
     }
 
     public static void main(String[] args) {
@@ -228,10 +281,6 @@ public class Generation {
                 tableName = ss[1];
                 continue;
             }
-            if(ss[0].equals("class")){
-                className = capitalize(ss[1]);
-                continue;
-            }
             if(ss[0].equals("namespace")){
                 pckg = ss[1];
             }
@@ -240,13 +289,13 @@ public class Generation {
         if(action){
             if(tableName == null)System.out.println("Veuillez préciser la table dans la base de données !");
             else{
-                generateCrud(null, pckg, tableName, true);
+                generateCrud(pckg, tableName, true);
             }
         }else{
-            if(className == null) System.out.println("Veuillez préciser le nom de la classe !");
-            else if(tableName == null)System.out.println("Veuillez préciser la table dans la base de données !");
+
+            if(tableName == null)System.out.println("Veuillez préciser la table dans la base de données !");
             else{
-                generateModel("Test", pckg, tableName, false);
+                generateModel(pckg, tableName, false);
             }
         }
         

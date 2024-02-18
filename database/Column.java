@@ -15,6 +15,7 @@ public class Column {
     private int nullable;
     private String defaultValue;
     private boolean isFk;
+    private String value;
     private String fk_table;
 
     public Column(String column, String type, int nullable, boolean pk, String defaultv) throws IOException{
@@ -26,6 +27,7 @@ public class Column {
                 setType(splitage[1]);            
             }
         }
+
         setNullable(nullable);
         setPk(pk);
         setDefaultValue(defaultv);
@@ -41,6 +43,14 @@ public class Column {
 
     public String getDefaultValue() {
         return defaultValue;
+    }
+
+    public String getFk_table() {
+        return fk_table;
+    }
+
+    public void setFk_table(String fk_table) {
+        this.fk_table = fk_table;
     }
 
     public void setDefaultValue(String defaultValue) {
@@ -60,7 +70,13 @@ public class Column {
     public boolean isFk() {
         return isFk;
     }
+    public String getValue() {
+        return value;
+    }
 
+    public void setValue(String value) {
+        this.value = value;
+    }
     public void setFk(boolean isFk) {
         this.isFk = isFk;
     }

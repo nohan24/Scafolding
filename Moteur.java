@@ -153,6 +153,7 @@ public class Moteur {
         List<String> need = new ArrayList<>();
         need.add("package");
         String file = null;
+        
         try {
             file = Files.readString(path);
             PrintWriter writer = new PrintWriter(new FileWriter(className + "Controller." + lang));

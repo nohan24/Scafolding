@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -69,6 +70,7 @@ public class Database {
                     if(nomElement.equals("password")) setPassword(contenuElement);
                 }
             }
+    
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -82,21 +84,24 @@ public class Database {
         metadata.getPrimaryKeys(null, null, table);
         ResultSet r = metadata.getPrimaryKeys(null, null, table);
         ResultSet fk = metadata.getImportedKeys(null, null, table);
+        HashMap<String, String> fks = new HashMap<>();
+        while (fk.next()) {
+            fks.put(fk.getString("FKCOLUMN_NAME"), fk.getString("PKTABLE_NAME"));
+        }
         String pk = "";
         if(r.next()) pk = r.getString("COLUMN_NAME");
         ResultSet rs = metadata.getColumns(null, null, table, null);
-        while(rs.next()){
-            var primarykey = rs.getString("COLUMN_NAME") == pk;
+        while(rs.next()){            
+            var primarykey = rs.getString("COLUMN_NAME").equals(pk);
             var default_v = rs.getString("COLUMN_DEF");
             var col = new Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME"), rs.getInt("NULLABLE"), primarykey, default_v);
-            
+            if(fks.containsKey(col.getColumn())) {
+                col.setFk(true);
+                col.setFk_table(fks.get(col.getColumn()));
+            }
             ret.add(col);
         }
         return ret;
-    }
-
-    void getForeignKey(){
-        
     }
 
     public static void main(String[] args) {
