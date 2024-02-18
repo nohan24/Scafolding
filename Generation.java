@@ -67,6 +67,42 @@ public class Generation {
 
     }
 
+    private static void generateViewListe(String modelName, String packageName){
+
+        Path path = Paths.get("view/liste.tpl");
+        String namespace = getProjectName().concat(".Views");
+        if(packageName != null)namespace.concat(".".concat(packageName));
+        String fileName = packageName != null ? "Views/".concat(packageName).concat("/").concat(capitalize(modelName)).replace('.', '/') : "Views/".concat(capitalize(modelName));
+        try {
+            if(packageName != null){
+                File dir = new File("Views/".concat(packageName).replace('.', '/'));
+                dir.mkdirs();
+            }
+            PrintWriter writer = new PrintWriter(new FileWriter("liste".concat(fileName).concat(".cshtml")));
+            String headerColumns = "";
+            String rowColumns = ""; // MBOLA mila atao
+
+            List<Column> columns = database.getTableColumns(table);
+            for(Column c : columns){
+                headerColumns += "\n".concat("<th>").concat(c.getName()).concat("</th>").concat("\t\t");
+            }
+            headerColumns += "\n <th>Actions</th> \t\t";
+
+            String viewFile = Files.readString(path);
+            viewFile = viewFile.replace("#modelName#", modelName);
+            viewFile = viewFile.replace("#HeaderColumns#", headerColumns);
+            viewFile = viewFile.replace("#RowColumns#", rowColumns);
+            writer.println(viewFile);
+            writer.close();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } 
+
+    }
+
     private static void generateController(){
 
     }
