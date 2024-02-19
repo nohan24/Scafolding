@@ -320,13 +320,7 @@ public class Generation {
                     updateCode = updateCode + "  WHERE "+ id +"=@id\";\n" +
                     "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n";
                     for(Column c : columns){
-                        if(!c.isPk()){
-                            if(c.getType().equals("string")){
-                                updateCode = updateCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", " + "".concat("\"'\"+") + "this.".concat(capitalize(c.getColumn())).concat("+\"'\"").concat(");\n");
-                            }else{
-                                updateCode = updateCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
-                            }
-                        }
+                        updateCode = updateCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
                     }
                     updateCode = updateCode +
                     "\t\t\t\t\tcommand.ExecuteNonQuery();\n" +
@@ -358,11 +352,7 @@ public class Generation {
                     "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n";
                     for(Column c : columns){
                         if(!c.isPk()){
-                            if(c.getType().equals("string")){
-                                insertCode = insertCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", " + "".concat("\"'\"+") + "this.".concat(capitalize(c.getColumn())).concat("+\"'\"").concat(");\n");
-                            }else{
-                                insertCode = insertCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
-                            }
+                            insertCode = insertCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
                         }
                     }
                 insertCode = insertCode +
