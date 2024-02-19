@@ -95,19 +95,34 @@ public class Database {
         return type;
     }
 
+    public String getTableId(String table) throws SQLException{
+        Connection connection = getConnection();
+        var ret = "";
+        DatabaseMetaData metadata = connection.getMetaData();
+        ResultSet r = metadata.getPrimaryKeys(null, null, table);
+        if(r.next()) ret = r.getString("COLUMN_NAME");
+        connection.close();
+        return ret;
+    }
+
     public HashMap<String, List<String>> getFks(List<Column> columns, Path p) throws SQLException, IOException{
         HashMap<String, List<String>> ret = new HashMap<>();
+        String id = "";
         for(Column c : columns){
             if(c.isFk()){
                 var fcol = getTableColumns(c.getFk_table(), p);
                 var scol = new ArrayList<String>();
-                for(Column cc : fcol){      
+                for(Column cc : fcol){     
+                    if(cc.isPk()){
+                        id = cc.getColumn();
+                    } 
                     if(cc.getType().equals("string")){
                         scol.add(cc.getColumn());
                     }  
                 }
                 ret.put(c.getFk_table(), scol);
             }
+
         }
 
         return ret;
@@ -138,6 +153,8 @@ public class Database {
             }
             ret.add(col);
         }
+
+        connection.close();
         return ret;
     }
 

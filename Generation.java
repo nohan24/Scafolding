@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -20,7 +21,7 @@ public class Generation {
     static Path path = Paths.get("model/model.tpl");
     static Path cs = Paths.get("model/cs.mdl");
 
-    private static void generateModel(String packageName, String table, boolean isCrud){
+    private static List<Column> generateModel(String packageName, String table, boolean isCrud){
 
    
         String namespace = getProjectName().concat(".Models");
@@ -52,17 +53,19 @@ public class Generation {
             modelFile = modelFile.replace("#crud#", crudFunction);
             writer.println(modelFile);
             writer.close();
-            
+            return columns;
         } catch (IOException e) {
             e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
         }    
+
+        return null;
     } 
 
     private static void generateCrud(String packageName, String table, boolean isCrud){
-        generateModel(packageName, table, true);
-        generateController(table);
+        List<Column> columns = generateModel(packageName, table, true);
+        generateController(table, columns);
     }
 
     static String capitalize(String input){
@@ -205,10 +208,13 @@ public class Generation {
         } 
 
     }
-    private static void generateController(String table){
+    private static void generateController(String table, List<Column> columns){
         Path path = Paths.get("controller/cs.tpl");
         String namespace = getProjectName().concat(".Controllers");
         String fileName = "Controllers/".concat(capitalize(table));
+
+        
+
         try {
             PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat("Controller.cs")));
             String controllerFile = Files.readString(path);
@@ -223,10 +229,12 @@ public class Generation {
         }
     }
 
+
     private static String CrudFunction(String table, List<Column> columns){
         String delete = "";
         String update = "";
         String find = "";
+        String fk_function = "";
         for(Column c : columns){
             if(c.isPk()){
                 delete = delete(table, c.getColumn());
@@ -235,11 +243,47 @@ public class Generation {
                 break;
             }
         }
+
+        try {
+            HashMap<String, List<String>> map = database.getFks(columns, cs);
+            for(String key : map.keySet()){
+
+                String fk_generator = "public Dictionary<string, string> fk"+ capitalize(key) +"() {\n" +
+                    "\t\t\tDictionary<string, string> listA = new Dictionary<string, string>();\n" +
+                    "\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
+                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
+                    "\t\t\t\tconnection.Open();\n" +
+                    "\t\t\t\tstring sql = \"select * from "+ key +"\";\n" +
+                    "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n" +
+                    "\t\t\t\t\tusing (NpgsqlDataReader reader = command.ExecuteReader()) {\n" +
+                    "\t\t\t\t\t\twhile (reader.Read()) {\n" +
+                    "\t\t\t\t\t\t\tstring str = \"\";\n";
+                    for(String s : map.get(key)){
+                        fk_generator = fk_generator + "\t\t\t\t\t\t\tstr = str + reader.GetString(\""+ s +"\");\n";
+                    }
+                    fk_generator = fk_generator +
+                    "\t\t\t\t\t\t\tlistA.Add(reader.GetInt32(\""+ database.getTableId(key) +"\").ToString(), str);\n" +
+                    "\t\t\t\t\t\t}\n" +
+                    "\t\t\t\t\t}\n" +
+                    "\t\t\t\t}\n" +
+                    "\t\t\t}\n" +
+                    "\t\t\treturn listA;\n" +
+                    "\t\t}\n";
+
+                    fk_function = fk_function + fk_generator;
+            }
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         String list = all(table, columns);
         String create = create(table, columns);
         String ret = "";
 
-        ret = ret.concat(create.concat("\n\t\t")).concat(find).concat("\n\t\t").concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t");
+        ret = ret.concat(create.concat("\n\t\t")).concat(find).concat("\n\t\t").concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t").concat(fk_function).concat("\n\t\t");
         return ret;
     }
 

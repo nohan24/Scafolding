@@ -28,7 +28,7 @@ namespace Scafolding.Controllers{
         {
             Test objInstance = new Test();
             Test selectedTest = objInstance.getById(id);
-            return View();
+            return View(selectedTest);
         }
 
         [HttpPost]

@@ -14,6 +14,7 @@ namespace #namespace#{
         
         public IActionResult Create()
         {
+            #fk#
             return View();
         }
 
@@ -28,7 +29,7 @@ namespace #namespace#{
         {
             #modelName# objInstance = new #modelName#();
             #modelName# selected#modelName# = objInstance.getById(id);
-            return View();
+            return View(selected#modelName#);
         }
 
         [HttpPost]

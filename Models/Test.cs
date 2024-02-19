@@ -101,6 +101,25 @@ namespace Scafolding.Models{
  		} 
 
  
+		public Dictionary<string, string> fkDept() {
+			Dictiona<string, string> listA = new Dictionary<string, string>();
+			string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
+			using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
+				connection.Open();
+				string sql = "select * from dept";
+				using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
+					using (NpgsqlDataReader reader = command.ExecuteReader()) {
+						while (reader.Read()) {
+							string str = "";
+							str = str + reader.GetString("nom");
+							listA.Add(reader.GetInt32(" id "), str);
+						}
+					}
+				}
+			}
+			return listA;
+		}
+
 		
    }
 }
