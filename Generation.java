@@ -62,6 +62,7 @@ public class Generation {
 
     private static void generateCrud(String packageName, String table, boolean isCrud){
         generateModel(packageName, table, true);
+        generateController(table);
     }
 
     static String capitalize(String input){
@@ -204,21 +205,16 @@ public class Generation {
         } 
 
     }
-    private static void generateController(String table,String modelPackage, String packageName){
+    private static void generateController(String table){
         Path path = Paths.get("controller/cs.tpl");
         String namespace = getProjectName().concat(".Controllers");
-        if(packageName != null)namespace.concat(".".concat(packageName));
-        String fileName = packageName != null ? "Controllers/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Controllers/".concat(capitalize(table));
+        String fileName = "Controllers/".concat(capitalize(table));
         try {
-            if(packageName != null){
-                File dir = new File("Controllers/".concat(packageName).replace('.', '/'));
-                dir.mkdirs();
-            }
             PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat("Controller.cs")));
-
             String controllerFile = Files.readString(path);
             controllerFile = controllerFile.replace("#modelName#", capitalize(table));
-            controllerFile = controllerFile.replace("#modelPackage#", modelPackage);
+            controllerFile = controllerFile.replace("#project#", getProjectName());
+            controllerFile = controllerFile.replace("#namespace#", namespace);
             writer.println(controllerFile);
             writer.close();
             
@@ -230,10 +226,12 @@ public class Generation {
     private static String CrudFunction(String table, List<Column> columns){
         String delete = "";
         String update = "";
+        String find = "";
         for(Column c : columns){
             if(c.isPk()){
                 delete = delete(table, c.getColumn());
                 update = update(table, c.getColumn(), columns);
+                find = find(table, c.getColumn(), columns);
                 break;
             }
         }
@@ -241,8 +239,45 @@ public class Generation {
         String create = create(table, columns);
         String ret = "";
 
-        ret = ret.concat(create.concat("\n\t\t")).concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t");
+        ret = ret.concat(create.concat("\n\t\t")).concat(find).concat("\n\t\t").concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t");
         return ret;
+    }
+
+    static String find(String table, String id, List<Column> columns){
+        String getByIdCode = "public "+capitalize(table)+" getById(int id) {\n" +
+                     "\t\t\t"+capitalize(table)+" obj = new "+ capitalize(table) +"();\n" +
+                     "\t\t\tString connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
+                     "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
+                     "\t\t\t\tconnection.Open();\n" +
+                     "\t\t\t\tString sql = \"select * from "+table+" where "+ id +"=\" + id;\n" +
+                     "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n" +
+                     "\t\t\t\t\tusing (NpgsqlDataReader reader = command.ExecuteReader()) {\n" +
+                     "\t\t\t\t\t\twhile (reader.Read()) {\n" +
+                     "\t\t\t\t\t\t\tobj = new "+capitalize(table)+"();\n";
+                     var s = "";
+                     for(Column c : columns){
+                        if(c.getType().equals("string")){
+                            s = "String";
+                        }else if(c.getType().equals("int")){
+                            s = "Int32";
+                        }else if(c.getType().equals("double")){
+                            s = "Double";
+                        }else if(c.getType().equals("DateTime")){
+                            s = "DateTime";
+                        }
+                        getByIdCode = getByIdCode + 
+                        "\t\t\t\t\t\t\tobj."+ capitalize(c.getColumn()) +" = reader.get"+ s +"(\""+ c.getColumn() +"\");  \n";
+                     }
+                     getByIdCode = getByIdCode + 
+                     "\t\t\t\t\t\t}\n" +
+                     "\t\t\t\t\t}\n" +
+                     "\t\t\t\t}\n" +
+                     "\t\t\t}\n" +
+                     "\t\t\treturn obj;\n" +
+                     "\t\t}\n";
+
+
+        return getByIdCode;
     }
 
     static String all(String table, List<Column> columns){

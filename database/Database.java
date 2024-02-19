@@ -95,6 +95,24 @@ public class Database {
         return type;
     }
 
+    public HashMap<String, List<String>> getFks(List<Column> columns, Path p) throws SQLException, IOException{
+        HashMap<String, List<String>> ret = new HashMap<>();
+        for(Column c : columns){
+            if(c.isFk()){
+                var fcol = getTableColumns(c.getFk_table(), p);
+                var scol = new ArrayList<String>();
+                for(Column cc : fcol){      
+                    if(cc.getType().equals("string")){
+                        scol.add(cc.getColumn());
+                    }  
+                }
+                ret.put(c.getFk_table(), scol);
+            }
+        }
+
+        return ret;
+    }
+
     public List<Column> getTableColumns(String table, Path p) throws SQLException, IOException{
         List<Column> ret = new ArrayList<>();
         if(table == null)return ret;

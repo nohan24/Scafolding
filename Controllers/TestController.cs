@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
-using #project#.Models;
+using Scafolding.Models;
 using System.Collections.Generic;
 
-namespace #namespace#{
-    public class #modelName#Controller : Controller
+namespace Scafolding.Controllers{
+    public class TestController : Controller
     {
         public IActionResult Liste()
         {
-            #modelName# objInstance = new #modelName#();
-            List<#modelName#> all = objInstance.getAll();
+            Test objInstance = new Test();
+            List<Test> all = objInstance.getAll();
             return View(all);
         }
         
@@ -18,7 +18,7 @@ namespace #namespace#{
         }
 
         [HttpPost]
-        public IActionResult Create(#modelName# obj)
+        public IActionResult Create(Test obj)
         {
             obj.insert();
             return RedirectToAction("Liste");
@@ -26,13 +26,13 @@ namespace #namespace#{
 
         public IActionResult Update(int id)
         {
-            #modelName# objInstance = new #modelName#();
-            #modelName# selected#modelName# = objInstance.getById(id);
+            Test objInstance = new Test();
+            Test selectedTest = objInstance.getById(id);
             return View();
         }
 
         [HttpPost]
-        public IActionResult Edit(#modelName# obj)
+        public IActionResult Edit(Test obj)
         {
             obj.update();
             return RedirectToAction("Liste");
@@ -40,9 +40,10 @@ namespace #namespace#{
 
         public IActionResult Delete(int id)
         {
-            #modelName# objInstance = new #modelName#();
+            Test objInstance = new Test();
             objInstance.delete(id);
             return RedirectToAction("Liste");
         }
     }
 }
+

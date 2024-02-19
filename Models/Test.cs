@@ -18,7 +18,7 @@ namespace Scafolding.Models{
 				connection.Open();
 				string sql = "insert into test(nom ,argent ,id_dept ) values(@nom ,@argent ,@id_dept )";
 				using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
-					command.Parameters.AddWithValue("@nom", "'"+this.Nom+"'");
+					command.Parameters.AddWithValue("@nom", this.Nom);
 					command.Parameters.AddWithValue("@argent", this.Argent);
 					command.Parameters.AddWithValue("@id_dept", this.Id_dept);
 					command.ExecuteNonQuery();
@@ -27,13 +27,35 @@ namespace Scafolding.Models{
 			}
 		}
 
+		public Test getById(int id) {
+			Test obj = new Test();
+			String connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
+			using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
+				connection.Open();
+				String sql = "select * from test where id=" + id;
+				using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
+					using (NpgsqlDataReader reader = command.ExecuteReader()) {
+						while (reader.Read()) {
+							obj = new Test();
+							obj.Id = reader.getInt32("id");  
+							obj.Nom = reader.getString("nom");  
+							obj.Argent = reader.getDouble("argent");  
+							obj.Id_dept = reader.getInt32("id_dept");  
+						}
+					}
+				}
+			}
+			return obj;
+		}
+
 		public void update() {
 			string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
 			using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 				connection.Open();
 				string sql = "UPDATE test SET nom=@nom ,argent=@argent ,id_dept=@id_dept   WHERE id=@id";
 				using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
-					command.Parameters.AddWithValue("@nom", "'"+this.Nom+"'");
+					command.Parameters.AddWithValue("@id", this.Id);
+					command.Parameters.AddWithValue("@nom", this.Nom);
 					command.Parameters.AddWithValue("@argent", this.Argent);
 					command.Parameters.AddWithValue("@id_dept", this.Id_dept);
 					command.ExecuteNonQuery();
