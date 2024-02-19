@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.regex.Pattern;
+
 import database.Column;
 import database.Database;
 import java.nio.file.Files;
@@ -15,10 +17,12 @@ public class Generation {
     private static String tableName = null;
     private static boolean action;
     private static String pckg = null;
+    static Path path = Paths.get("model/model.tpl");
+    static Path cs = Paths.get("model/cs.mdl");
 
     private static void generateModel(String packageName, String table, boolean isCrud){
 
-        Path path = Paths.get("model/model.tpl");
+   
         String namespace = getProjectName().concat(".Models");
         if(packageName != null)namespace.concat(".".concat(packageName));
         String fileName = packageName != null ? "Models/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Models/".concat(capitalize(table));
@@ -29,9 +33,9 @@ public class Generation {
             }
             PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat(".cs")));
             String attribut = "";
-            String crudFunction = "dfdf";
+            String crudFunction = "";
 
-            List<Column> columns = database.getTableColumns(table);
+            List<Column> columns = database.getTableColumns(table, cs);
             for(Column c : columns){
                 attribut += "\n\t\t".concat(c.getGetset()).concat("\t\t");
             }
@@ -90,7 +94,7 @@ public class Generation {
             String headerColumns = "";
             String rowColumns = "";
 
-            List<Column> columns = database.getTableColumns(table);
+            List<Column> columns = database.getTableColumns(table,cs);
             String idModel = "Id";
             for(Column c : columns){
                 if (!c.isPk()) {
@@ -135,7 +139,7 @@ public class Generation {
             PrintWriter writer = new PrintWriter(new FileWriter("insert".concat(fileName).concat(".cshtml")));
             String champs = "";
 
-            List<Column> columns = database.getTableColumns(table);
+            List<Column> columns = database.getTableColumns(table, cs);
             for(Column c : columns){
                 if (!c.isPk()) {
                     champs += "\n".concat("<div class=\"form-group\">").concat("\t\t");
@@ -174,7 +178,7 @@ public class Generation {
             PrintWriter writer = new PrintWriter(new FileWriter("update".concat(fileName).concat(".cshtml")));
             String champs = "";
 
-            List<Column> columns = database.getTableColumns(table);
+            List<Column> columns = database.getTableColumns(table, cs);
             for(Column c : columns){
                 if (!c.isPk()) {
                     champs += "\n".concat("<div class=\"form-group\">").concat("\t\t");
@@ -225,7 +229,7 @@ public class Generation {
         String ret = "";
         ret = ret + "public List<"+capitalize(capitalize(table))+"> getAll() { \n"
         .concat("\t\t\tList<"+capitalize(capitalize(table))+"> listA= new List<"+capitalize(capitalize(table))+">();\n")
-        .concat("\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding; \n")
+        .concat("\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\"; \n")
         .concat("\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n")
         .concat("\t\t\t\tconnection.Open();\n")
         .concat("\t\t\t\tstring sql = \"select * from "+ table +"\"; \n")
@@ -236,20 +240,20 @@ public class Generation {
 
         var s = "";
         for(Column c : columns){
-            if(c.getType() == "string"){
+            if(c.getType().equals("string")){
                 s = "String";
-            }else if(c.getType() == "int"){
+            }else if(c.getType().equals("int")){
                 s = "Int32";
-            }else if(c.getType() == "double"){
+            }else if(c.getType().equals("double")){
                 s = "Double";
-            }else if(c.getType() == "DateTime"){
+            }else if(c.getType().equals("DateTime")){
                 s = "DateTime";
             }
 
-            ret = ret + "\t\t\t\t\t\t\tobj." + capitalize(c.getColumn()) + " = reader.Get"+s+"("+c.getColumn()+"); \n";
+            ret = ret + "\t\t\t\t\t\t\tobj." + capitalize(c.getColumn()) + " = reader.Get"+s+"(\""+c.getColumn()+"\"); \n";
         }
 
-        ret = ret + "\t\t\t\t\t\t\tlistA.add(obj); \n \t\t\t\t\t\t} \n \t\t\t\t\t} \n \t\t\t\t}\n\t\t\t\tconnection.Close(); \n \t\t\t} \n\t\t\treturn listA; \n \t\t} \n\n ";
+        ret = ret + "\t\t\t\t\t\t\tlistA.Add(obj); \n \t\t\t\t\t\t} \n \t\t\t\t\t} \n \t\t\t\t}\n\t\t\t\tconnection.Close(); \n \t\t\t} \n\t\t\treturn listA; \n \t\t} \n\n ";
         return ret;
     }
 
@@ -290,7 +294,7 @@ public class Generation {
                     for(Column c : columns){
                         if(!c.isPk()){
                             if(c.getType().equals("string")){
-                                insertCode = insertCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", " + "".concat("\"'\"+") + "this".concat(capitalize(c.getColumn())).concat("+\"'\"").concat(");\n");
+                                insertCode = insertCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", " + "".concat("\"'\"+") + "this.".concat(capitalize(c.getColumn())).concat("+\"'\"").concat(");\n");
                             }else{
                                 insertCode = insertCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
                             }

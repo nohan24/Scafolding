@@ -1,6 +1,8 @@
 package database;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -9,6 +11,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -76,7 +80,22 @@ public class Database {
         }
     }
 
-    public List<Column> getTableColumns(String table) throws SQLException, IOException{
+    String getTypes(String type, Path cs){
+        try {
+            for(String s : Files.readAllLines(cs)){
+                var splitage = s.split("=>");
+                if(Pattern.matches("^"+splitage[0]+".*", type)){
+                    return splitage[1];
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return type;
+    }
+
+    public List<Column> getTableColumns(String table, Path p) throws SQLException, IOException{
         List<Column> ret = new ArrayList<>();
         if(table == null)return ret;
         Connection connection = getConnection();
@@ -94,7 +113,7 @@ public class Database {
         while(rs.next()){            
             var primarykey = rs.getString("COLUMN_NAME").equals(pk);
             var default_v = rs.getString("COLUMN_DEF");
-            var col = new Column(rs.getString("COLUMN_NAME"), rs.getString("TYPE_NAME"), rs.getInt("NULLABLE"), primarykey, default_v);
+            var col = new Column(rs.getString("COLUMN_NAME"), getTypes(rs.getString("TYPE_NAME"), p), rs.getInt("NULLABLE"), primarykey, default_v);
             if(fks.containsKey(col.getColumn())) {
                 col.setFk(true);
                 col.setFk_table(fks.get(col.getColumn()));
@@ -104,14 +123,5 @@ public class Database {
         return ret;
     }
 
-    public static void main(String[] args) {
-        Database d = new Database();
-        try {
-            d.getTableColumns("test");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+
 }

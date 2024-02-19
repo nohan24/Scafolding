@@ -1,16 +1,12 @@
 package database;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.regex.Pattern;
+
 
 public class Column {
     private String column;
     private String type;
     private String getset;
-    private Path mdl = Paths.get("model/cs.mdl");
     private boolean isPk;
     private int nullable;
     private String defaultValue;
@@ -20,14 +16,8 @@ public class Column {
 
     public Column(String column, String type, int nullable, boolean pk, String defaultv) throws IOException{
         setColumn(column);
-        setGetset("public string ".concat(capitalize(column).concat(" { get; set; }")));
-        for(String s : Files.readAllLines(mdl)){
-            String[] splitage = s.split("=>");
-            if(Pattern.matches("^" + splitage[0] + ".*", type)){
-                setType(splitage[1]);            
-            }
-        }
-
+        setGetset("public "+ type +" ".concat(capitalize(column).concat(" { get; set; }")));
+        setType(type);
         setNullable(nullable);
         setPk(pk);
         setDefaultValue(defaultv);

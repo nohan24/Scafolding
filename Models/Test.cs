@@ -1,13 +1,14 @@
+using Npgsql;
 namespace Scafolding.Models{
 
    public class Test {
 
       public Test(){}
       
-		public string Id { get; set; }		
+		public int Id { get; set; }		
 		public string Nom { get; set; }		
-		public string Argent { get; set; }		
-		public string Id_dept { get; set; }		
+		public double Argent { get; set; }		
+		public int Id_dept { get; set; }		
 
 		public void insert() {
 			string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
@@ -15,7 +16,7 @@ namespace Scafolding.Models{
 				connection.Open();
 				string sql = "insert into test(nom ,argent ,id_dept ) values(@nom ,@argent ,@id_dept )";
 				using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
-					command.Parameters.AddWithValue("@nom", "'"+thisNom+"'");
+					command.Parameters.AddWithValue("@nom", "'"+this.Nom+"'");
 					command.Parameters.AddWithValue("@argent", this.Argent);
 					command.Parameters.AddWithValue("@id_dept", this.Id_dept);
 					command.ExecuteNonQuery();
@@ -40,7 +41,7 @@ namespace Scafolding.Models{
 
 		public List<Test> getAll() { 
 			List<Test> listA= new List<Test>();
-			string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding; 
+			string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding"; 
 			using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 				connection.Open();
 				string sql = "select * from test"; 
@@ -48,11 +49,11 @@ namespace Scafolding.Models{
 					using (NpgsqlDataReader reader = command.ExecuteReader()) {
 						while (reader.Read()) {
 							var obj = new Test();  
-							obj.Id = reader.Get(id); 
-							obj.Nom = reader.Get(nom); 
-							obj.Argent = reader.Get(argent); 
-							obj.Id_dept = reader.Get(id_dept); 
-							listA.add(obj); 
+							obj.Id = reader.GetInt32("id"); 
+							obj.Nom = reader.GetString("nom"); 
+							obj.Argent = reader.GetDouble("argent"); 
+							obj.Id_dept = reader.GetInt32("id_dept"); 
+							listA.Add(obj); 
  						} 
  					} 
  				}

@@ -11,7 +11,7 @@ if not "%1"=="" (
 )
 
 
-java Generation.java %concatenation%
+java -cp app.jar;postgres.jar Generation %concatenation%
 
 endlocal
 
