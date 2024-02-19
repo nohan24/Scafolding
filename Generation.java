@@ -7,8 +7,6 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Pattern;
-
 import database.Column;
 import database.Database;
 import java.nio.file.Files;
@@ -85,6 +83,7 @@ public class Generation {
         dir.mkdirs();
         try {
             generateViewListe(table, columns);
+            generateViewCreate(table, columns);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -117,8 +116,6 @@ public class Generation {
                     rowColumns += "\t\t\t\t\n</td>";
                 }
             }
-
-            //String id = database.getTableId(table);
             
             rowColumns += "\n<td>\n";
             rowColumns += "\t\t<a asp-action=\"Update\" asp-controller=\""+ capitalize(table) +"\" asp-route-id=\"@item."+capitalize(idModel)+"\">Modifier</a> \n";
@@ -138,42 +135,47 @@ public class Generation {
 
     }
     
-    private static void generateViewCreate(String table, String packageName){
-
+    private static void generateViewCreate(String table, List<Column> columns){
         Path path = Paths.get("view/create.tpl");
-        String namespace = getProjectName().concat(".Views");
-        if(packageName != null)namespace.concat(".".concat(packageName));
-        String fileName = packageName != null ? "Views/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Views/".concat(capitalize(table));
+        String fileName = "Views/".concat(capitalize(table)).concat("/Create");
         try {
-            if(packageName != null){
-                File dir = new File("Views/".concat(packageName).replace('.', '/'));
-                dir.mkdirs();
-            }
-            PrintWriter writer = new PrintWriter(new FileWriter("insert".concat(fileName).concat(".cshtml")));
+            PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat(".cshtml")));
             String champs = "";
 
-            List<Column> columns = database.getTableColumns(table, cs);
             for(Column c : columns){
                 if (!c.isPk()) {
-                    champs += "\n".concat("<div class=\"form-group\">").concat("\t\t");
-                    champs += "\n".concat("<label asp-for=\"").concat(c.getColumn()).concat("\" class=\"control-label\">").concat(c.getColumn()).concat(" : \t\t\t");
-                    champs += "\n".concat("<input asp-for=\"").concat(c.getColumn()).concat("\" class=\"form-control\" />").concat("\t\t\t");
-                    champs += "\n".concat("<span asp-validation-for=\"").concat(c.getColumn()).concat("\" class=\"text-danger\"></span>").concat("\t\t\t");
-                    champs += "\n".concat("</div>").concat("\t\t");
+                    if(c.isFk()){
+                        champs += "\n".concat("<div class=\"form-group\">").concat("\t\t");
+                        champs += "\n".concat("<label asp-for=\"").concat(capitalize(c.getColumn())).concat("\" class=\"control-label\">").concat(capitalize(c.getColumn())).concat(" : ").concat("</label> \t\t\t");
+                        champs += "\n".concat("<select asp-for=\"").concat(capitalize(c.getColumn())).concat("\" class=\"form-control\" >").concat("\t\t\t");
+
+                        champs += "\n".concat("@foreach (var item in ViewData[\""+ c.getFk_table() +"\"] as Dictionary<string, string>)\n{");
+                        champs += "\n".concat("<option value=\"@item.key\">@item.value</option>");
+                        champs += "\n".concat("}");
+
+                        champs += "\n".concat("</select>").concat("\t\t\t");
+                        champs += "\n".concat("<span asp-validation-for=\"").concat(capitalize(c.getColumn())).concat("\" class=\"text-danger\"></span>").concat("\t\t\t");
+                        champs += "\n".concat("</div><br/>").concat("\t\t");
+                    }else{
+                        champs += "\n".concat("<div class=\"form-group\">").concat("\t\t");
+                        champs += "\n".concat("<label asp-for=\"").concat(capitalize(c.getColumn())).concat("\" class=\"control-label\">").concat(capitalize(c.getColumn())).concat(" : ").concat("</label> \t\t\t");
+                        champs += "\n".concat("<input asp-for=\"").concat(capitalize(c.getColumn())).concat("\" class=\"form-control\" />").concat("\t\t\t");
+                        champs += "\n".concat("<span asp-validation-for=\"").concat(capitalize(c.getColumn())).concat("\" class=\"text-danger\"></span>").concat("\t\t\t");
+                        champs += "\n".concat("</div><br/>").concat("\t\t");
+                    }
+                  
                 }
             }
 
             String viewFile = Files.readString(path);
-            viewFile = viewFile.replace("#modelName#", table);
+            viewFile = viewFile.replace("#modelName#", capitalize(table));
             viewFile = viewFile.replace("#champs#", champs);
             writer.println(viewFile);
             writer.close();
             
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } 
+        }
 
     }
     
@@ -225,7 +227,7 @@ public class Generation {
 
         for (Column c : columns) {
             if(c.isFk()){
-                fk_func = fk_func + "var "+ c.getFk_table() +" = obj.fk"+ capitalize(c.getFk_table()) +"(); \n\t\t\t";
+                fk_func = fk_func + "ViewData[\"" + c.getFk_table() + "\"]" + " = obj.fk"+ capitalize(c.getFk_table()) +"(); \n\t\t\t";
             }
         }
 

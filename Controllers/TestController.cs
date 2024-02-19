@@ -16,7 +16,7 @@ namespace Scafolding.Controllers{
         public IActionResult Create()
         {
             Test obj = new Test();
-            var dept = obj.fkDept(); 
+            ViewData["dept"] = obj.fkDept(); 
 			
             return View();
         }

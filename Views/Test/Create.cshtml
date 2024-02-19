@@ -1,0 +1,36 @@
+@model Test
+@{
+    ViewData["Title"] = "Create Test";
+}
+
+<h2>Ajouter un nouveau Test</h2>
+
+<form asp-action="Create" method="post">
+
+    
+<div class="form-group">		
+<label asp-for="Nom" class="control-label">Nom : </label> 			
+<input asp-for="Nom" class="form-control" />			
+<span asp-validation-for="Nom" class="text-danger"></span>			
+</div><br/>		
+<div class="form-group">		
+<label asp-for="Argent" class="control-label">Argent : </label> 			
+<input asp-for="Argent" class="form-control" />			
+<span asp-validation-for="Argent" class="text-danger"></span>			
+</div><br/>		
+<div class="form-group">		
+<label asp-for="Id_dept" class="control-label">Id_dept : </label> 			
+<select asp-for="Id_dept" class="form-control" >			
+@foreach (var item in ViewData["dept"] as Dictionary<string, string>){
+<option value="@item.Key">@item.Value</option>
+@}
+</select>			
+<span asp-validation-for="Id_dept" class="text-danger"></span>			
+</div><br/>		
+
+<br/>
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+</form>
+

@@ -1,12 +1,16 @@
 @model #modelName#
+@{
+    ViewData["Title"] = "Create #modelName#";
+}
 
-<h2>Ajouter un Nouveau #modelName#</h2>
+<h2>Ajouter un nouveau #modelName#</h2>
 
 <form asp-action="Create" method="post">
 
     #champs#
 
-    <div class="form-group">
+<br/>
+    <div class="form-group mt-3">
         <button type="submit" class="btn btn-primary">Enregistrer</button>
     </div>
 </form>
