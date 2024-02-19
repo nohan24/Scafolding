@@ -66,6 +66,7 @@ public class Generation {
     private static void generateCrud(String packageName, String table, boolean isCrud){
         List<Column> columns = generateModel(packageName, table, true);
         generateController(table, columns);
+        generateView(table, columns);
     }
 
     static String capitalize(String input){
@@ -79,43 +80,53 @@ public class Generation {
         return splt[splt.length - 1];
     }
 
-    private static void generateView(){
-
+    private static void generateView(String table, List<Column> columns){
+        File dir = new File("Views/".concat(capitalize(table)));
+        dir.mkdirs();
+        try {
+            generateViewListe(table, columns);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    private static void generateViewListe(String table, String packageName){
-
+    private static void generateViewListe(String table, List<Column> columns) throws SQLException{
         Path path = Paths.get("view/liste.tpl");
-        String namespace = getProjectName().concat(".Views");
-        if(packageName != null)namespace.concat(".".concat(packageName));
-        String fileName = packageName != null ? "Views/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Views/".concat(capitalize(table));
+        String fileName = "Views/".concat(capitalize(table)).concat("/Liste");
         try {
-            if(packageName != null){
-                File dir = new File("Views/".concat(packageName).replace('.', '/'));
-                dir.mkdirs();
-            }
-            PrintWriter writer = new PrintWriter(new FileWriter("liste".concat(fileName).concat(".cshtml")));
+
+            PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat(".cshtml")));
             String headerColumns = "";
             String rowColumns = "";
-
-            List<Column> columns = database.getTableColumns(table,cs);
+            
             String idModel = "Id";
+    
             for(Column c : columns){
                 if (!c.isPk()) {
-                    headerColumns += "\n".concat("<th>").concat(c.getColumn()).concat("</th>").concat("\t\t");
-                    //rowColumns += "\n".concat("<td>").concat("@item.").concat(c.getValue()).concat("</td>").concat("\t\t");
+                    headerColumns += "\n".concat("<th>").concat(capitalize(c.getColumn())).concat("</th>").concat("\t\t");
                 }else{
-                    idModel = c.getValue();
+                    idModel = c.getColumn();
                 }
             }
             headerColumns += "\n <th>Actions</th> \t\t";
+
+            for(Column c : columns){
+                if(!c.isPk()){
+                    rowColumns += "\t\t\t\t\n<td>";
+                    rowColumns += "\t\t\t\t\n@item."+ capitalize(c.getColumn()) +"\n";
+                    rowColumns += "\t\t\t\t\n</td>";
+                }
+            }
+
+            //String id = database.getTableId(table);
+            
             rowColumns += "\n<td>\n";
-            rowColumns += "\t\t<a asp-action=\"Update"+capitalize(table)+"\" asp-route-id=\"@item."+idModel+"\">Modifier</a> \n";
-            rowColumns += "\t\t<a asp-action=\"Delete\" asp-route-id=\"@item."+idModel+"\"\">Supprimer</a>\n";
+            rowColumns += "\t\t<a asp-action=\"Update\" asp-controller=\""+ capitalize(table) +"\" asp-route-id=\"@item."+capitalize(idModel)+"\">Modifier</a> \n";
+            rowColumns += "\t\t<a asp-action=\"Delete\" asp-controller=\""+ capitalize(table) +"\" asp-route-id=\"@item."+capitalize(idModel)+"\">Supprimer</a>\n";
             rowColumns += "</td>\n";
 
             String viewFile = Files.readString(path);
-            viewFile = viewFile.replace("#modelName#", table);
+            viewFile = viewFile.replace("#modelName#", capitalize(table));
             viewFile = viewFile.replace("#HeaderColumns#", headerColumns);
             viewFile = viewFile.replace("#RowColumns#", rowColumns);
             writer.println(viewFile);
@@ -123,9 +134,7 @@ public class Generation {
             
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } 
+        }
 
     }
     

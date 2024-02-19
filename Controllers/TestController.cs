@@ -9,14 +9,15 @@ namespace Scafolding.Controllers{
         {
             Test objInstance = new Test();
             List<Test> all = objInstance.getAll();
-            return View(all);
+            ViewData["data"] = all;
+            return View();
         }
         
         public IActionResult Create()
         {
             Test obj = new Test();
             var dept = obj.fkDept(); 
-
+			
             return View();
         }
 

@@ -9,7 +9,8 @@ namespace #namespace#{
         {
             #modelName# objInstance = new #modelName#();
             List<#modelName#> all = objInstance.getAll();
-            return View(all);
+            ViewData["data"] = all;
+            return View();
         }
         
         public IActionResult Create()

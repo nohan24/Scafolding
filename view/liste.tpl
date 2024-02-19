@@ -1,4 +1,6 @@
-@model List<#modelName#>
+@{
+    ViewData["Title"] = "Liste #modelName#";
+}
 
 <h1>Liste #modelName#</h1>
 
@@ -9,7 +11,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in ViewData["data"] as List<#modelName#>)
         {
             <tr>
                 #RowColumns#

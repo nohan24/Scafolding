@@ -37,10 +37,10 @@ namespace Scafolding.Models{
 					using (NpgsqlDataReader reader = command.ExecuteReader()) {
 						while (reader.Read()) {
 							obj = new Test();
-							obj.Id = reader.getInt32("id");  
-							obj.Nom = reader.getString("nom");  
-							obj.Argent = reader.getDouble("argent");  
-							obj.Id_dept = reader.getInt32("id_dept");  
+							obj.Id = reader.GetInt32("id");  
+							obj.Nom = reader.GetString("nom");  
+							obj.Argent = reader.GetDouble("argent");  
+							obj.Id_dept = reader.GetInt32("id_dept");  
 						}
 					}
 				}
