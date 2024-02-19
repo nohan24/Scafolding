@@ -224,21 +224,20 @@ public class Generation {
             
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } 
+        }
     }
 
     private static String CrudFunction(String table, List<Column> columns){
         String delete = "";
+        String update = "";
         for(Column c : columns){
             if(c.isPk()){
                 delete = delete(table, c.getColumn());
+                update = update(table, c.getColumn(), columns);
                 break;
             }
         }
         String list = all(table, columns);
-        String update = "";
         String create = create(table, columns);
         String ret = "";
 
@@ -292,6 +291,51 @@ public class Generation {
                     "\t\t\t}\n" +
                     "\t\t}\n";
         return deleteCode;
+    }
+
+    static String update(String table, String id, List<Column> columns){
+        var cols = "";
+        var acols = "";
+        var update = "";
+        for(Column c : columns){
+            if(!c.isPk()){
+                cols = cols + c.getColumn() + " ,";
+                acols = acols + "@" + c.getColumn() + " ,";
+                update = update + c.getColumn() + "=@" + c.getColumn()+ " ,";
+            }
+        }
+
+        cols = cols.substring(0, cols.length() - 1);
+
+        update = update.substring(0, update.length() - 1);
+        acols = acols.substring(0, acols.length() - 1);
+
+        String updateCode = "public void update() {\n" +
+                    "\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
+                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
+                    "\t\t\t\tconnection.Open();\n" +
+                    "\t\t\t\tstring sql = \"UPDATE " + table + 
+                    " SET ";
+                    updateCode = updateCode + update;
+                    updateCode = updateCode + "  WHERE "+ id +"=@id\";\n" +
+                    "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n";
+                    for(Column c : columns){
+                        if(!c.isPk()){
+                            if(c.getType().equals("string")){
+                                updateCode = updateCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", " + "".concat("\"'\"+") + "this.".concat(capitalize(c.getColumn())).concat("+\"'\"").concat(");\n");
+                            }else{
+                                updateCode = updateCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
+                            }
+                        }
+                    }
+                    updateCode = updateCode +
+                    "\t\t\t\t\tcommand.ExecuteNonQuery();\n" +
+                    "\t\t\t\t}\n" +
+                    "\t\t\t\tconnection.Close();\n" +
+                    "\t\t\t\t}\n" +
+                    "\t\t}\n";
+
+        return updateCode;
     }
 
     static String create(String table, List<Column> columns){

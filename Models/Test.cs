@@ -1,4 +1,6 @@
 using Npgsql;
+using System.Data;
+
 namespace Scafolding.Models{
 
    public class Test {
@@ -25,7 +27,21 @@ namespace Scafolding.Models{
 			}
 		}
 
-		
+		public void update() {
+			string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
+			using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
+				connection.Open();
+				string sql = "UPDATE test SET nom=@nom ,argent=@argent ,id_dept=@id_dept   WHERE id=@id";
+				using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
+					command.Parameters.AddWithValue("@nom", "'"+this.Nom+"'");
+					command.Parameters.AddWithValue("@argent", this.Argent);
+					command.Parameters.AddWithValue("@id_dept", this.Id_dept);
+					command.ExecuteNonQuery();
+				}
+				connection.Close();
+				}
+		}
+
 		public void delete(int id) {
 			String connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
 			using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
