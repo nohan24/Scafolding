@@ -14,6 +14,7 @@ namespace #namespace#{
         
         public IActionResult Create()
         {
+            #modelName# obj = new #modelName#();
             #fk#
             return View();
         }

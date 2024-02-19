@@ -212,8 +212,13 @@ public class Generation {
         Path path = Paths.get("controller/cs.tpl");
         String namespace = getProjectName().concat(".Controllers");
         String fileName = "Controllers/".concat(capitalize(table));
+        String fk_func = "";
 
-        
+        for (Column c : columns) {
+            if(c.isFk()){
+                fk_func = fk_func + "var "+ c.getFk_table() +" = obj.fk"+ capitalize(c.getFk_table()) +"(); \n\t\t\t";
+            }
+        }
 
         try {
             PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat("Controller.cs")));
@@ -221,6 +226,8 @@ public class Generation {
             controllerFile = controllerFile.replace("#modelName#", capitalize(table));
             controllerFile = controllerFile.replace("#project#", getProjectName());
             controllerFile = controllerFile.replace("#namespace#", namespace);
+            controllerFile = controllerFile.replace("#fk#", fk_func);
+
             writer.println(controllerFile);
             writer.close();
             

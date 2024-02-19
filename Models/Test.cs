@@ -102,7 +102,7 @@ namespace Scafolding.Models{
 
  
 		public Dictionary<string, string> fkDept() {
-			Dictiona<string, string> listA = new Dictionary<string, string>();
+			Dictionary<string, string> listA = new Dictionary<string, string>();
 			string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
 			using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 				connection.Open();
@@ -112,7 +112,7 @@ namespace Scafolding.Models{
 						while (reader.Read()) {
 							string str = "";
 							str = str + reader.GetString("nom");
-							listA.Add(reader.GetInt32(" id "), str);
+							listA.Add(reader.GetInt32("id").ToString(), str);
 						}
 					}
 				}
