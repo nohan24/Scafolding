@@ -106,7 +106,7 @@ public class Generation {
             }
             headerColumns += "\n <th>Actions</th> \t\t";
             rowColumns += "\n<td>\n";
-            rowColumns += "\t\t<a asp-action=\"Edit\" asp-route-id=\"@item."+idModel+"\">Modifier</a> \n";
+            rowColumns += "\t\t<a asp-action=\"Update"+capitalize(table)+"\" asp-route-id=\"@item."+idModel+"\">Modifier</a> \n";
             rowColumns += "\t\t<a asp-action=\"Delete\" asp-route-id=\"@item."+idModel+"\"\">Supprimer</a>\n";
             rowColumns += "</td>\n";
 
@@ -204,8 +204,29 @@ public class Generation {
         } 
 
     }
-    private static void generateController(){
+    private static void generateController(String table,String modelPackage, String packageName){
+        Path path = Paths.get("controller/cs.tpl");
+        String namespace = getProjectName().concat(".Controllers");
+        if(packageName != null)namespace.concat(".".concat(packageName));
+        String fileName = packageName != null ? "Controllers/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Controllers/".concat(capitalize(table));
+        try {
+            if(packageName != null){
+                File dir = new File("Controllers/".concat(packageName).replace('.', '/'));
+                dir.mkdirs();
+            }
+            PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat("Controller.cs")));
 
+            String controllerFile = Files.readString(path);
+            controllerFile = controllerFile.replace("#modelName#", capitalize(table));
+            controllerFile = controllerFile.replace("#modelPackage#", modelPackage);
+            writer.println(controllerFile);
+            writer.close();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } 
     }
 
     private static String CrudFunction(String table, List<Column> columns){
