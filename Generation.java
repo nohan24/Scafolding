@@ -317,7 +317,7 @@ public class Generation {
                             s = "DateTime";
                         }
                         getByIdCode = getByIdCode + 
-                        "\t\t\t\t\t\t\tobj."+ capitalize(c.getColumn()) +" = reader.get"+ s +"(\""+ c.getColumn() +"\");  \n";
+                        "\t\t\t\t\t\t\tobj."+ capitalize(c.getColumn()) +" = reader.Get"+ s +"(\""+ c.getColumn() +"\");  \n";
                      }
                      getByIdCode = getByIdCode + 
                      "\t\t\t\t\t\t}\n" +
