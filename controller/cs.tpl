@@ -30,8 +30,9 @@ namespace #namespace#{
         public IActionResult Update(int id)
         {
             #modelName# objInstance = new #modelName#();
-            #modelName# selected#modelName# = objInstance.getById(id);
-            return View(selected#modelName#);
+            #modelName# obj = objInstance.getById(id);
+            #fk#
+            return View(obj);
         }
 
         [HttpPost]

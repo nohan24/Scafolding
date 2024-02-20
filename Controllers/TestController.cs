@@ -32,7 +32,10 @@ namespace Scafolding.Controllers{
         {
             Test objInstance = new Test();
             Test selectedTest = objInstance.getById(id);
-            return View(selectedTest);
+            ViewData["data"] = selectedTest;
+            ViewData["dept"] = obj.fkDept(); 
+			
+            return View();
         }
 
         [HttpPost]

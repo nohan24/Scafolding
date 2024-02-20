@@ -3,6 +3,7 @@ serial=>int
 varchar=>string
 text=>string
 date=>DateTime
+timestamp=>DateTime
 double=>double
 float=>double
 decimal=>double
