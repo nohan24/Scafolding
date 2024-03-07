@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using #project#.Models;
 using System.Collections.Generic;
-using Sysyem.Text;
+using System.Text;
 
 namespace #namespace#{
     public class #modelName#Controller : Controller
@@ -59,7 +59,7 @@ namespace #namespace#{
             csvContent.AppendLine("#cols#");
             foreach (var d in data)
             {
-                csvContent.AppendLine($"{d.Id};{d.Nom};{d.Date_naissance}");
+                csvContent.AppendLine($"#data#");
             }
             string fileName = "#modelName#.csv";
             byte[] byteArray = Encoding.UTF8.GetBytes(csvContent.ToString());

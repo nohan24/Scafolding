@@ -234,12 +234,18 @@ public class Generation {
         String namespace = getProjectName().concat(".Controllers");
         String fileName = "Controllers/".concat(capitalize(table));
         String fk_func = "";
-
+        String data = "";
+        String cols = "";
         for (Column c : columns) {
+            cols += c.getColumn() + ";";
+            data += "{d."+ capitalize(c.getColumn()) +"};";
             if(c.isFk()){
                 fk_func = fk_func + "ViewData[\"" + c.getFk_table() + "\"]" + " = obj.fk"+ capitalize(c.getFk_table()) +"(); \n\t\t\t";
             }
         }
+
+        cols = cols.substring(0, cols.length() - 1);
+        data = data.substring(0, data.length() - 1);
 
         try {
             PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat("Controller.cs")));
@@ -248,6 +254,8 @@ public class Generation {
             controllerFile = controllerFile.replace("#project#", getProjectName());
             controllerFile = controllerFile.replace("#namespace#", namespace);
             controllerFile = controllerFile.replace("#fk#", fk_func);
+            controllerFile = controllerFile.replace("#data#", data);
+            controllerFile = controllerFile.replace("#cols#", cols);
 
             writer.println(controllerFile);
             writer.close();
