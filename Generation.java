@@ -35,8 +35,10 @@ public class Generation {
             String crudFunction = "";
 
             List<Column> columns = database.getTableColumns(table, cs);
+            String cols = "";
             for(Column c : columns){
                 attribut += "\n\t\t".concat(c.getGetset()).concat("\t\t");
+                cols += "\"" + c.getColumn() + "\",\n\t\t";
             }
 
             if(isCrud){
@@ -49,6 +51,8 @@ public class Generation {
             else modelFile = modelFile.replace("#className#", capitalize(table));
             modelFile = modelFile.replace("#getset#", attribut.concat("\n\n"));
             modelFile = modelFile.replace("#crud#", crudFunction);
+            modelFile = modelFile.replace("#cols#", cols);
+
             writer.println(modelFile);
             writer.close();
             return columns;
@@ -179,7 +183,7 @@ public class Generation {
         }
 
     }
-    
+
     private static void generateViewUpdate(String table, List<Column> columns) throws SQLException{
 
         Path path = Paths.get("view/update.tpl");
