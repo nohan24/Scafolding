@@ -13,5 +13,6 @@ namespace #packageName#{
 
       public #className#(){}
       #getset##crud#
+      
    }
 }

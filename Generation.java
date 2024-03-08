@@ -271,6 +271,7 @@ public class Generation {
         String update = "";
         String find = "";
         String fk_function = "";
+        String insertcsv = "";
         for(Column c : columns){
             if(c.isPk()){
                 delete = delete(table, c.getColumn());
@@ -283,6 +284,8 @@ public class Generation {
         try {
             HashMap<String, List<String>> map = database.getFks(columns, cs);
             for(String key : map.keySet()){
+
+                
 
                 String fk_generator = "public Dictionary<string, string> fk"+ capitalize(key) +"() {\n" +
                     "\t\t\tDictionary<string, string> listA = new Dictionary<string, string>();\n" +
@@ -318,8 +321,9 @@ public class Generation {
         String list = all(table, columns);
         String create = create(table, columns);
         String ret = "";
+        insertcsv = insertCsv(table, columns);
 
-        ret = ret.concat(create.concat("\n\t\t")).concat(find).concat("\n\t\t").concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t").concat(fk_function).concat("\n\t\t");
+        ret = ret.concat(create.concat("\n\t\t")).concat(find).concat("\n\t\t").concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t").concat(fk_function).concat("\n\t\t").concat(insertcsv).concat("\n\t\t");
         return ret;
     }
 
@@ -446,6 +450,39 @@ public class Generation {
 
         return updateCode;
     }
+
+    
+    static String insertCsv(String table, List<Column> columns){
+        var cols = "";
+        var acols = "";
+        for(Column c : columns){
+
+                cols = cols + c.getColumn() + " ,";
+                acols = acols + "@" + c.getColumn() + " ,";
+        }
+
+        cols = cols.substring(0, cols.length() - 1);
+        acols = acols.substring(0, acols.length() - 1);
+        String insertCode = "\t\tpublic void insertCsv(List<"+ capitalize(table) +"> data) {\n" +
+                    "\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
+                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
+                    "\t\t\t\tconnection.Open();\n" +
+                    "\t\t\t\tstring sql = \"insert into "+table+"("+ cols +") values("+ acols +")\";\n" +
+                    "\t\t\t\tforeach(var d in data){\n" +
+                    "\t\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n";
+                    for(Column c : columns){
+                        insertCode = insertCode + "\t\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
+                    }
+                insertCode = insertCode +
+                    "\t\t\t\t\t\tcommand.ExecuteNonQuery();\n" +
+                    "\t\t\t\t\t}\n" +
+                    "\t\t\t\t}\n" +
+                    "\t\t\t\tconnection.Close();\n" +
+                    "\t\t\t}\n" +
+                    "\t\t}\n";
+        return insertCode;
+    }
+
 
     static String create(String table, List<Column> columns){
         var cols = "";
