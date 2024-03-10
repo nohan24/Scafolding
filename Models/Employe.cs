@@ -2,26 +2,36 @@ using Npgsql;
 using System.Data;
 using System.Collections.Generic;
 
-namespace #packageName#{
+namespace Scafolding.Models{
 
-   public class #className# {
+   public class Employe {
 
       List<String> cols = new List<String>
       {
-        #cols#
+        "id",
+		"nom",
+		"date_naissance",
+		
       };
 
       private string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
 
-      public #className#(){}
-      #getset#
+      public Employe(){}
+      
+		public int Id { get; set; }		
+		public string Nom { get; set; }		
+		public DateTime Date_naissance { get; set; }		
+
+
 
       public void insert() {
          using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
             connection.Open();
-            string sql = "#sqlinsert#";
+            string sql = "insert into (nom,date_naissance) values(@nom,@date_naissance)";
             using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
-                #commandinsert#
+                command.Parameters.AddWithValue("@nom", this.Nom);
+				command.Parameters.AddWithValue("@date_naissance", this.Date_naissance);
+				
                command.ExecuteNonQuery();
             }
             connection.Close();
@@ -71,9 +81,12 @@ namespace #packageName#{
 	public void update() {
 		using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 			connection.Open();
-			string sql = "UPDATE #table# SET #sqlupdate#";
+			string sql = "UPDATE employe SET nom=@nom ,date_naissance=@date_naissance  WHERE id=@id";
 			using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
-				#commandupdate#
+				command.Parameters.AddWithValue("@id", this.Id);
+					command.Parameters.AddWithValue("@nom", this.Nom);
+					command.Parameters.AddWithValue("@date_naissance", this.Date_naissance);
+					
 				command.ExecuteNonQuery();
 			}
 			connection.Close();
@@ -83,25 +96,28 @@ namespace #packageName#{
 	public void delete(int id) {
 		using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 			connection.Open();
-			String sql = "DELETE FROM #table# WHERE #sqldelete#";
+			String sql = "DELETE FROM employe WHERE id=@id";
 			using(NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
-            #commanddelete#
+            command.Parameters.AddWithValue("@id", id);
 				command.ExecuteNonQuery();
 			}
 			connection.Close();
 		}
 	}
 
-	public List<#className#> getAll() { 
-		List<#className#> listA= new List<#className#>();
+	public List<Employe> getAll() { 
+		List<Employe> listA= new List<Employe>();
 		using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 			connection.Open();
-			string sql = "select * from #table#"; 
+			string sql = "select * from employe"; 
 			using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
 				using (NpgsqlDataReader reader = command.ExecuteReader()) {
 					while (reader.Read()) {
-						var obj = new #className#();  
-						#commandcreate#
+						var obj = new Employe();  
+						nullobj.Id = reader.GetInt32("id"); 
+							obj.Nom = reader.GetString("nom"); 
+							obj.Date_naissance = reader.GetDateTime("date_naissance"); 
+							
 						listA.Add(obj); 
 						} 
 					} 
@@ -114,3 +130,4 @@ namespace #packageName#{
       
    }
 }
+

@@ -33,18 +33,47 @@ public class Generation {
 
             List<Column> columns = database.getTableColumns(table, cs);
             String cols = "";
+            var i_target = "";
+            var i_values = "";
+            var pk = "";
+            var updateCode = "";
             for(Column c : columns){
                 attribut += "\n\t\t".concat(c.getGetset()).concat("\t\t");
                 cols += "\"" + c.getColumn() + "\",\n\t\t";
+                updateCode = updateCode + "command.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n\t\t\t\t\t";
+                if(!c.isPk()){
+                    i_target = i_target + c.getColumn() + ",";
+                    i_values = i_values + "@" + c.getColumn() + ",";
+                }else{
+                    pk = c.getColumn();
+                }
             }
             
             String modelFile = Files.readString(path);
             modelFile = modelFile.replace("#packageName#", namespace);
-            if(isCrud)modelFile = modelFile.replace("#className#", capitalize(tableName));
-            else modelFile = modelFile.replace("#className#", capitalize(table));
+            modelFile = modelFile.replace("#className#", capitalize(table));
+            modelFile = modelFile.replace("#table#", table);
+
+            // getset
             modelFile = modelFile.replace("#getset#", attribut.concat("\n\n"));
             modelFile = modelFile.replace("#cols#", cols);
-            modelFile = modelFile.replace("#sqlinsert#", cols);
+
+            // create
+            i_target = i_target.substring(0, i_target.length() - 1);
+            i_values = i_values.substring(0, i_values.length() - 1);
+            modelFile = modelFile.replace("#sqlinsert#", "insert into (" + i_target + ") values(" + i_values + ")");
+            modelFile = modelFile.replace("#commandinsert#", create(columns));
+
+            // liste
+            modelFile = modelFile.replace("#commandcreate#", all(columns));
+    
+            // update
+            modelFile = modelFile.replace("#commandupdate#", updateCode);
+            modelFile = modelFile.replace("#sqlupdate#", update(columns));
+
+            // delete
+            modelFile = modelFile.replace("#sqldelete#", pk + "=@" + pk);
+            modelFile = modelFile.replace("#commanddelete#", "command.Parameters.AddWithValue(\"@"+ pk +"\", "+ pk +");");
 
             writer.println(modelFile);
             writer.close();
@@ -54,9 +83,54 @@ public class Generation {
         } catch (SQLException e) {
             e.printStackTrace();
         }    
-
         return null;
     } 
+    
+    static String update(List<Column> columns){
+        var update = "";
+        String pk = null;
+        for(Column c : columns){
+            if(!c.isPk()){
+                update = update + c.getColumn() + "=@" + c.getColumn()+ " ,";
+            }else{
+                pk = c.getColumn();
+            }
+        }
+        update = update.substring(0, update.length() - 1);
+        update = update + " WHERE "+ pk +"=@"+ pk;
+        return update;
+    }
+    
+    static String all(List<Column> columns){
+        String ret = null;
+        String s = null;
+        for(Column c : columns){
+            if(c.getType().equals("string")){
+                s = "String";
+            }else if(c.getType().equals("int")){
+                s = "Int32";
+            }else if(c.getType().equals("double")){
+                s = "Double";
+            }else if(c.getType().equals("DateTime")){
+                s = "DateTime";
+            }else{
+                s = "String";
+            }
+
+            ret = ret + "obj." + capitalize(c.getColumn()) + " = reader.Get"+s+"(\""+c.getColumn()+"\"); \n\t\t\t\t\t\t\t";
+        }
+        return ret;
+    }
+    
+    static String create(List<Column> columns){
+        String insertCode = "";
+        for(Column c : columns){
+            if(!c.isPk()){
+                insertCode = insertCode + "command.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n\t\t\t\t";
+            }
+        }           
+        return insertCode;
+    }
 
     private static void generateCrud(String packageName, String table, boolean isCrud){
         List<Column> columns = generateModel(packageName, table, true);
@@ -236,7 +310,6 @@ public class Generation {
                 fk_func = fk_func + "ViewData[\"" + c.getFk_table() + "\"]" + " = obj.fk"+ capitalize(c.getFk_table()) +"(); \n\t\t\t";
             }
         }
-
         cols = cols.substring(0, cols.length() - 1);
         data = data.substring(0, data.length() - 1);
 
@@ -260,19 +333,8 @@ public class Generation {
 
 
     private static String CrudFunction(String table, List<Column> columns){
-        String delete = "";
-        String update = "";
-        String find = "";
+    
         String fk_function = "";
-        String insertcsv = "";
-        for(Column c : columns){
-            if(c.isPk()){
-                delete = delete(table, c.getColumn());
-                update = update(table, c.getColumn(), columns);
-                find = find(table, c.getColumn(), columns);
-                break;
-            }
-        }
 
         try {
             HashMap<String, List<String>> map = database.getFks(columns, cs);
@@ -311,12 +373,9 @@ public class Generation {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String list = all(table, columns);
-        String create = create(table, columns);
+  
         String ret = "";
-        insertcsv = insertCsv(table, columns);
 
-        ret = ret.concat(create.concat("\n\t\t")).concat(find).concat("\n\t\t").concat(update).concat("\n\t\t").concat(delete).concat("\n\t\t").concat(list).concat("\n\t\t").concat(fk_function).concat("\n\t\t").concat(insertcsv).concat("\n\t\t");
         return ret;
     }
 
@@ -356,94 +415,6 @@ public class Generation {
 
         return getByIdCode;
     }
-
-    static String all(String table, List<Column> columns){
-        String ret = "";
-        ret = ret + "public List<"+capitalize(capitalize(table))+"> getAll() { \n"
-        .concat("\t\t\tList<"+capitalize(capitalize(table))+"> listA= new List<"+capitalize(capitalize(table))+">();\n")
-        .concat("\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\"; \n")
-        .concat("\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n")
-        .concat("\t\t\t\tconnection.Open();\n")
-        .concat("\t\t\t\tstring sql = \"select * from "+ table +"\"; \n")
-        .concat("\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n")
-        .concat("\t\t\t\t\tusing (NpgsqlDataReader reader = command.ExecuteReader()) {\n")
-        .concat("\t\t\t\t\t\twhile (reader.Read()) {\n")
-        .concat("\t\t\t\t\t\t\tvar obj = new "+ capitalize(table) +"();  \n");
-
-        var s = "";
-        for(Column c : columns){
-            if(c.getType().equals("string")){
-                s = "String";
-            }else if(c.getType().equals("int")){
-                s = "Int32";
-            }else if(c.getType().equals("double")){
-                s = "Double";
-            }else if(c.getType().equals("DateTime")){
-                s = "DateTime";
-            }
-
-            ret = ret + "\t\t\t\t\t\t\tobj." + capitalize(c.getColumn()) + " = reader.Get"+s+"(\""+c.getColumn()+"\"); \n";
-        }
-
-        ret = ret + "\t\t\t\t\t\t\tlistA.Add(obj); \n \t\t\t\t\t\t} \n \t\t\t\t\t} \n \t\t\t\t}\n\t\t\t\tconnection.Close(); \n \t\t\t} \n\t\t\treturn listA; \n \t\t} \n\n ";
-        return ret;
-    }
-
-    static String delete(String table, String id){
-        String deleteCode = "public void delete(int id) {\n" +
-                    "\t\t\tString connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
-                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
-                    "\t\t\t\tconnection.Open();\n" +
-                    "\t\t\t\tString sql = \"DELETE FROM "+ table +" WHERE "+ id +"=@id\";\n" +
-                    "\t\t\t\tusing(NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n" +
-                    "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@id\", id);\n" +
-                    "\t\t\t\t\tcommand.ExecuteNonQuery();\n" +
-                    "\t\t\t\t}\n" +
-                    "\t\t\t\tconnection.Close();\n" +
-                    "\t\t\t}\n" +
-                    "\t\t}\n";
-        return deleteCode;
-    }
-
-    static String update(String table, String id, List<Column> columns){
-        var cols = "";
-        var acols = "";
-        var update = "";
-        for(Column c : columns){
-            if(!c.isPk()){
-                cols = cols + c.getColumn() + " ,";
-                acols = acols + "@" + c.getColumn() + " ,";
-                update = update + c.getColumn() + "=@" + c.getColumn()+ " ,";
-            }
-        }
-
-        cols = cols.substring(0, cols.length() - 1);
-
-        update = update.substring(0, update.length() - 1);
-        acols = acols.substring(0, acols.length() - 1);
-
-        String updateCode = "public void update() {\n" +
-                    "\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
-                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
-                    "\t\t\t\tconnection.Open();\n" +
-                    "\t\t\t\tstring sql = \"UPDATE " + table + 
-                    " SET ";
-                    updateCode = updateCode + update;
-                    updateCode = updateCode + "  WHERE "+ id +"=@id\";\n" +
-                    "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n";
-                    for(Column c : columns){
-                        updateCode = updateCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
-                    }
-                    updateCode = updateCode +
-                    "\t\t\t\t\tcommand.ExecuteNonQuery();\n" +
-                    "\t\t\t\t}\n" +
-                    "\t\t\t\tconnection.Close();\n" +
-                    "\t\t\t\t}\n" +
-                    "\t\t}\n";
-
-        return updateCode;
-    }
-
     
     static String insertCsv(String table, List<Column> columns){
         var cols = "";
@@ -477,37 +448,6 @@ public class Generation {
     }
 
 
-    static String create(String table, List<Column> columns){
-        var cols = "";
-        var acols = "";
-        for(Column c : columns){
-            if(!c.isPk()){
-                cols = cols + c.getColumn() + " ,";
-                acols = acols + "@" + c.getColumn() + " ,";
-            }
-        }
-
-        cols = cols.substring(0, cols.length() - 1);
-        acols = acols.substring(0, acols.length() - 1);
-        String insertCode = "\t\tpublic void insert() {\n" +
-                    "\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
-                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
-                    "\t\t\t\tconnection.Open();\n" +
-                    "\t\t\t\tstring sql = \"insert into "+table+"("+ cols +") values("+ acols +")\";\n" +
-                    "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n";
-                    for(Column c : columns){
-                        if(!c.isPk()){
-                            insertCode = insertCode + "\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
-                        }
-                    }
-                insertCode = insertCode +
-                    "\t\t\t\t\tcommand.ExecuteNonQuery();\n" +
-                    "\t\t\t\t}\n" +
-                    "\t\t\t\tconnection.Close();\n" +
-                    "\t\t\t}\n" +
-                    "\t\t}\n";
-        return insertCode;
-    }
 
     public static void main(String[] args) {
         String[] ss;
