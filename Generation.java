@@ -19,9 +19,7 @@ public class Generation {
     static Path path = Paths.get("model/model.tpl");
     static Path cs = Paths.get("model/cs.mdl");
 
-    private static List<Column> generateModel(String packageName, String table, boolean isCrud){
-
-   
+    private static List<Column> generateModel(String packageName, String table, boolean isCrud){   
         String namespace = getProjectName().concat(".Models");
         if(packageName != null)namespace.concat(".".concat(packageName));
         String fileName = packageName != null ? "Models/".concat(packageName).concat("/").concat(capitalize(table)).replace('.', '/') : "Models/".concat(capitalize(table));
@@ -32,7 +30,6 @@ public class Generation {
             }
             PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat(".cs")));
             String attribut = "";
-            String crudFunction = "";
 
             List<Column> columns = database.getTableColumns(table, cs);
             String cols = "";
@@ -40,18 +37,14 @@ public class Generation {
                 attribut += "\n\t\t".concat(c.getGetset()).concat("\t\t");
                 cols += "\"" + c.getColumn() + "\",\n\t\t";
             }
-
-            if(isCrud){
-                crudFunction = CrudFunction(table, columns);
-            }
-
+            
             String modelFile = Files.readString(path);
             modelFile = modelFile.replace("#packageName#", namespace);
             if(isCrud)modelFile = modelFile.replace("#className#", capitalize(tableName));
             else modelFile = modelFile.replace("#className#", capitalize(table));
             modelFile = modelFile.replace("#getset#", attribut.concat("\n\n"));
-            modelFile = modelFile.replace("#crud#", crudFunction);
             modelFile = modelFile.replace("#cols#", cols);
+            modelFile = modelFile.replace("#sqlinsert#", cols);
 
             writer.println(modelFile);
             writer.close();

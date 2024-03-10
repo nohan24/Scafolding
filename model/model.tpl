@@ -11,27 +11,25 @@ namespace #packageName#{
         #cols#
       };
 
+      private string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
+
       public #className#(){}
       #getset#
 
-      	public void insert() {
-		string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
-		using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
-			connection.Open();
-			string sql = "insert into employe(nom ,date_naissance ) values(@nom ,@date_naissance )";
-			using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
-				command.Parameters.AddWithValue("@nom", this.Nom);
-				command.Parameters.AddWithValue("@date_naissance", this.Date_naissance);
-
-				command.ExecuteNonQuery();
-			}
-			connection.Close();
-		}
-	}
+      public void insert() {
+         using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
+            connection.Open();
+            string sql = "#sqlinsert#";
+            using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
+               #commandinsert#
+               command.ExecuteNonQuery();
+            }
+            connection.Close();
+         }
+	   }
 
 	public void insertCsv(List<Employe> data)
 	{
-        string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
         using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
         {
             connection.Open();
@@ -53,7 +51,6 @@ namespace #packageName#{
 
 	public Employe getById(int id) {
 		Employe obj = new Employe();
-		String connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
 		using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 			connection.Open();
 			String sql = "select * from employe where id=" + id;
@@ -72,7 +69,6 @@ namespace #packageName#{
 	}
 
 	public void update() {
-		string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
 		using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 			connection.Open();
 			string sql = "UPDATE employe SET nom=@nom ,date_naissance=@date_naissance   WHERE id=@id";
@@ -87,7 +83,6 @@ namespace #packageName#{
 	}
 
 	public void delete(int id) {
-		String connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding";
 		using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 			connection.Open();
 			String sql = "DELETE FROM employe WHERE id=@id";
@@ -101,7 +96,6 @@ namespace #packageName#{
 
 	public List<Employe> getAll() { 
 		List<Employe> listA= new List<Employe>();
-		string connectionString = "Host=localhost;Username=postgres;Password=root;Database=scafolding"; 
 		using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 			connection.Open();
 			string sql = "select * from employe"; 
