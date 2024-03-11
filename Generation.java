@@ -53,6 +53,7 @@ public class Generation {
             modelFile = modelFile.replace("#packageName#", namespace);
             modelFile = modelFile.replace("#className#", capitalize(table));
             modelFile = modelFile.replace("#table#", table);
+            modelFile = modelFile.replace("#id#", pk);
 
             // getset
             modelFile = modelFile.replace("#getset#", attribut.concat("\n\n"));
@@ -65,7 +66,7 @@ public class Generation {
             modelFile = modelFile.replace("#commandinsert#", create(columns));
 
             // liste
-            modelFile = modelFile.replace("#commandcreate#", all(columns));
+            modelFile = modelFile.replace("#commandliste#", all(columns));
     
             // update
             modelFile = modelFile.replace("#commandupdate#", updateCode);
@@ -75,16 +76,74 @@ public class Generation {
             modelFile = modelFile.replace("#sqldelete#", pk + "=@" + pk);
             modelFile = modelFile.replace("#commanddelete#", "command.Parameters.AddWithValue(\"@"+ pk +"\", "+ pk +");");
 
+            // foreign key 
+            String fk_function = "";
+            try {
+                HashMap<String, List<String>> map = database.getFks(columns, cs);
+                for(String key : map.keySet()){
+                    String fk_generator = "public Dictionary<string, string> fk"+ capitalize(key) +"() {\n" +
+                        "\t\t\tDictionary<string, string> listA = new Dictionary<string, string>();\n" +
+                        "\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
+                        "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
+                        "\t\t\t\tconnection.Open();\n" +
+                        "\t\t\t\tstring sql = \"select * from "+ key +"\";\n" +
+                        "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n" +
+                        "\t\t\t\t\tusing (NpgsqlDataReader reader = command.ExecuteReader()) {\n" +
+                        "\t\t\t\t\t\twhile (reader.Read()) {\n" +
+                        "\t\t\t\t\t\t\tstring str = \"\";\n";
+                        for(String s : map.get(key)){
+                            fk_generator = fk_generator + "\t\t\t\t\t\t\tstr = str + reader.GetString(\""+ s +"\");\n";
+                        }
+                        fk_generator = fk_generator +
+                        "\t\t\t\t\t\t\tlistA.Add(reader.GetInt32(\""+ database.getTableId(key) +"\").ToString(), str);\n" +
+                        "\t\t\t\t\t\t}\n" +
+                        "\t\t\t\t\t}\n" +
+                        "\t\t\t\t}\n" +
+                        "\t\t\t}\n" +
+                        "\t\t\treturn listA;\n" +
+                        "\t\t}\n";
+    
+                        fk_function = fk_function + fk_generator;
+                }
+                modelFile = modelFile.replace("#foreignkey#", fk_function);    
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // import csv
+            String csvcommand = "";
+            for(Column c : columns){
+                csvcommand = csvcommand + "command.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n\t\t\t\t\t";
+            }
+            modelFile = modelFile.replace("#commandinsertcsv#", csvcommand); 
+            modelFile = modelFile.replace("#sqlinsertcsv#", insertCsv(table, columns)); 
+
             writer.println(modelFile);
             writer.close();
-            return columns;
         } catch (IOException e) {
             e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
         }    
+
         return null;
     } 
+
+    static String insertCsv(String table, List<Column> columns){
+        var cols = "";
+        var acols = "";
+        for(Column c : columns){
+                cols = cols + c.getColumn() + " ,";
+                acols = acols + "@" + c.getColumn() + " ,";
+        }
+
+        cols = cols.substring(0, cols.length() - 1);
+        acols = acols.substring(0, acols.length() - 1);
+        return "insert into "+table+"("+ cols +") values("+ acols +")";
+    
+    }
     
     static String update(List<Column> columns){
         var update = "";
@@ -102,7 +161,7 @@ public class Generation {
     }
     
     static String all(List<Column> columns){
-        String ret = null;
+        String ret = "";
         String s = null;
         for(Column c : columns){
             if(c.getType().equals("string")){
@@ -117,7 +176,7 @@ public class Generation {
                 s = "String";
             }
 
-            ret = ret + "obj." + capitalize(c.getColumn()) + " = reader.Get"+s+"(\""+c.getColumn()+"\"); \n\t\t\t\t\t\t\t";
+            ret = ret + "obj." + capitalize(c.getColumn()) + " = reader.Get"+s+"(\""+c.getColumn()+"\"); \n\t\t\t\t\t\t";
         }
         return ret;
     }
@@ -331,54 +390,6 @@ public class Generation {
         }
     }
 
-
-    private static String CrudFunction(String table, List<Column> columns){
-    
-        String fk_function = "";
-
-        try {
-            HashMap<String, List<String>> map = database.getFks(columns, cs);
-            for(String key : map.keySet()){
-
-                
-
-                String fk_generator = "public Dictionary<string, string> fk"+ capitalize(key) +"() {\n" +
-                    "\t\t\tDictionary<string, string> listA = new Dictionary<string, string>();\n" +
-                    "\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
-                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
-                    "\t\t\t\tconnection.Open();\n" +
-                    "\t\t\t\tstring sql = \"select * from "+ key +"\";\n" +
-                    "\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n" +
-                    "\t\t\t\t\tusing (NpgsqlDataReader reader = command.ExecuteReader()) {\n" +
-                    "\t\t\t\t\t\twhile (reader.Read()) {\n" +
-                    "\t\t\t\t\t\t\tstring str = \"\";\n";
-                    for(String s : map.get(key)){
-                        fk_generator = fk_generator + "\t\t\t\t\t\t\tstr = str + reader.GetString(\""+ s +"\");\n";
-                    }
-                    fk_generator = fk_generator +
-                    "\t\t\t\t\t\t\tlistA.Add(reader.GetInt32(\""+ database.getTableId(key) +"\").ToString(), str);\n" +
-                    "\t\t\t\t\t\t}\n" +
-                    "\t\t\t\t\t}\n" +
-                    "\t\t\t\t}\n" +
-                    "\t\t\t}\n" +
-                    "\t\t\treturn listA;\n" +
-                    "\t\t}\n";
-
-                    fk_function = fk_function + fk_generator;
-            }
-
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-  
-        String ret = "";
-
-        return ret;
-    }
-
     static String find(String table, String id, List<Column> columns){
         String getByIdCode = "public "+capitalize(table)+" getById(int id) {\n" +
                      "\t\t\t"+capitalize(table)+" obj = new "+ capitalize(table) +"();\n" +
@@ -415,39 +426,6 @@ public class Generation {
 
         return getByIdCode;
     }
-    
-    static String insertCsv(String table, List<Column> columns){
-        var cols = "";
-        var acols = "";
-        for(Column c : columns){
-
-                cols = cols + c.getColumn() + " ,";
-                acols = acols + "@" + c.getColumn() + " ,";
-        }
-
-        cols = cols.substring(0, cols.length() - 1);
-        acols = acols.substring(0, acols.length() - 1);
-        String insertCode = "\t\tpublic void insertCsv(List<"+ capitalize(table) +"> data) {\n" +
-                    "\t\t\tstring connectionString = \"Host=localhost;Username=postgres;Password=root;Database=scafolding\";\n" +
-                    "\t\t\tusing (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {\n" +
-                    "\t\t\t\tconnection.Open();\n" +
-                    "\t\t\t\tstring sql = \"insert into "+table+"("+ cols +") values("+ acols +")\";\n" +
-                    "\t\t\t\tforeach(var d in data){\n" +
-                    "\t\t\t\t\tusing (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {\n";
-                    for(Column c : columns){
-                        insertCode = insertCode + "\t\t\t\t\t\tcommand.Parameters.AddWithValue(\"@"+c.getColumn()+"\", this."+ capitalize(c.getColumn()) +");\n";
-                    }
-                insertCode = insertCode +
-                    "\t\t\t\t\t\tcommand.ExecuteNonQuery();\n" +
-                    "\t\t\t\t\t}\n" +
-                    "\t\t\t\t}\n" +
-                    "\t\t\t\tconnection.Close();\n" +
-                    "\t\t\t}\n" +
-                    "\t\t}\n";
-        return insertCode;
-    }
-
-
 
     public static void main(String[] args) {
         String[] ss;

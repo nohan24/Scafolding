@@ -28,19 +28,17 @@ namespace #packageName#{
          }
 	   }
 
-	public void insertCsv(List<Employe> data)
+	public void insertCsv(List<#className#> data)
 	{
         using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
         {
             connection.Open();
-            string sql = "insert into employe(id, nom ,date_naissance ) values(@id, @nom ,@date_naissance)";
+            string sql = "#sqlinsertcsv#";
             foreach (var d in data)
             {
                 using (NpgsqlCommand command = new NpgsqlCommand(sql, connection))
                 {
-                    command.Parameters.AddWithValue("@nom", d.Nom);
-                    command.Parameters.AddWithValue("@date_naissance", d.Date_naissance);
-					command.Parameters.AddWithValue("@id", d.Id);
+					#commandinsertcsv#
                     command.ExecuteNonQuery();
                 }
             }
@@ -49,18 +47,16 @@ namespace #packageName#{
         }
     }
 
-	public Employe getById(int id) {
-		Employe obj = new Employe();
+	public #className# getById(int id) {
+		#className# obj = new #className#();
 		using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)) {
 			connection.Open();
-			String sql = "select * from employe where id=" + id;
+			String sql = "select * from #table# where #id#=" + id;
 			using (NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
 				using (NpgsqlDataReader reader = command.ExecuteReader()) {
 					while (reader.Read()) {
-						obj = new Employe();
-						obj.Id = reader.GetInt32("id");  
-						obj.Nom = reader.GetString("nom");  
-						obj.Date_naissance = reader.GetDateTime("date_naissance");  
+						obj = new #className#();
+						#commandliste#
 					}
 				}
 			}
@@ -85,7 +81,7 @@ namespace #packageName#{
 			connection.Open();
 			String sql = "DELETE FROM #table# WHERE #sqldelete#";
 			using(NpgsqlCommand command = new NpgsqlCommand(sql, connection)) {
-            #commanddelete#
+            	#commanddelete#
 				command.ExecuteNonQuery();
 			}
 			connection.Close();
@@ -101,15 +97,17 @@ namespace #packageName#{
 				using (NpgsqlDataReader reader = command.ExecuteReader()) {
 					while (reader.Read()) {
 						var obj = new #className#();  
-						#commandcreate#
+						#commandliste#
 						listA.Add(obj); 
-						} 
 					} 
-				}
+				} 
+			}
 			connection.Close(); 
-			} 
-		return listA; 
 		} 
+		return listA; 
+	}
+
+	#foreignkey# 
 
       
    }
