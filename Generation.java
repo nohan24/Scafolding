@@ -122,6 +122,8 @@ public class Generation {
 
             writer.println(modelFile);
             writer.close();
+
+            return columns;
         } catch (IOException e) {
             e.printStackTrace();
         } catch (SQLException e) {
@@ -230,7 +232,6 @@ public class Generation {
             String rowColumns = "";
             
             String idModel = "Id";
-    
             for(Column c : columns){
                 if (!c.isPk()) {
                     headerColumns += "\n".concat("<th>").concat(capitalize(c.getColumn())).concat("</th>").concat("\t\t");

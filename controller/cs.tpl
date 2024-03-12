@@ -65,5 +65,27 @@ namespace #namespace#{
             byte[] byteArray = Encoding.UTF8.GetBytes(csvContent.ToString());
             return File(byteArray, "text/csv", fileName);
         }
+
+          [HttpPost]
+            public IActionResult Csv(IFormFile file)
+            {
+                try
+                {
+                    if (file != null && file.Length > 0)
+                    {
+                        if (Path.GetExtension(file.FileName).ToLower() == ".csv")
+                        {
+                            #modelName# e = new #modelName#();
+                            e.importCsv(file);
+                        }
+                    }
+                    
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                return Redirect("Liste");
+            }
     }
 }

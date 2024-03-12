@@ -1,12 +1,14 @@
 using Npgsql;
 using System.Data;
 using System.Collections.Generic;
+using System.Reflection;
+
 
 namespace #packageName#{
 
    public class #className# {
 
-      List<String> cols = new List<String>
+      private List<String> Cols = new List<String>
       {
         #cols#
       };
@@ -107,8 +109,79 @@ namespace #packageName#{
 		return listA; 
 	}
 
-	#foreignkey# 
+private string getTypeAttribut(string col)
+	{
+        Type type = typeof(Employe);
+        PropertyInfo[] properties = type.GetProperties();
+		foreach (PropertyInfo property in properties)
+		{
+			if(property.Name.ToLower() == col.ToLower())
+			{
+				return property.PropertyType.ToString().Replace("System.", "");
+			}
+		}
 
-      
+		return null;
+
+    }
+	
+	public void importCsv(IFormFile file)
+		{
+            using (var reader = new StreamReader(file.OpenReadStream()))
+            {
+                #className# e = new #className#();
+                string headerLine = reader.ReadLine();
+                string[] headers = headerLine.Split(';');
+				if (headers.Length != e.Cols.Count) throw new Exception("Colonne non accepté !");
+                foreach (var c in e.Cols)
+                {
+					if (!headers.Contains(c)) throw new Exception("Colonne non trouvé !");
+                }
+
+                Dictionary<string, int> columnIndexMap = new Dictionary<string, int>();
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    columnIndexMap[headers[i]] = i;
+                }
+
+				headerLine = headerLine.Replace(';', ',');
+
+				using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+				{
+                    connection.Open();
+
+                    while (!reader.EndOfStream)
+					{
+						var line = reader.ReadLine();
+						var values = line.Split(';');
+						var script = "";
+                        for (var i = 0; i < values.Length; i++)
+                        {
+							if (this.getTypeAttribut(headers[i]) == "String" || this.getTypeAttribut(headers[i]) == "DateTime"){
+								script += "'" + values[i] + "',";
+							}
+							else
+							{
+								script += values[i] + ",";
+							}
+                        }
+                        script = script.Substring(0, script.Length - 1);
+                        using (NpgsqlCommand command = new NpgsqlCommand("insert into #table# (" + headerLine + ") values("+ script +")", connection))
+                        {
+              
+                            command.ExecuteNonQuery();
+                        }
+                      
+                    }
+					connection.Close();
+				}
+     
+			
+            }
+
+        }	
+
+
+	#foreignkey# 
    }
 }
