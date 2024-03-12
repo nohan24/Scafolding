@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using #project#.Models;
 using System.Collections.Generic;
+using System.Text;
 
 namespace #namespace#{
     public class #modelName#Controller : Controller
@@ -48,5 +49,43 @@ namespace #namespace#{
             objInstance.delete(id);
             return RedirectToAction("Liste");
         }
+
+        [HttpGet]
+        public IActionResult Csv()
+        {
+            #modelName# e = new #modelName#();
+            List<#modelName#> data = e.getAll();
+            var csvContent = new StringBuilder();
+            csvContent.AppendLine("#cols#");
+            foreach (var d in data)
+            {
+                csvContent.AppendLine($"#data#");
+            }
+            string fileName = "#modelName#.csv";
+            byte[] byteArray = Encoding.UTF8.GetBytes(csvContent.ToString());
+            return File(byteArray, "text/csv", fileName);
+        }
+
+          [HttpPost]
+            public IActionResult Csv(IFormFile file)
+            {
+                try
+                {
+                    if (file != null && file.Length > 0)
+                    {
+                        if (Path.GetExtension(file.FileName).ToLower() == ".csv")
+                        {
+                            #modelName# e = new #modelName#();
+                            e.importCsv(file);
+                        }
+                    }
+                    
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                return Redirect("Liste");
+            }
     }
 }
