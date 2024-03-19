@@ -49,6 +49,7 @@ public class Generation {
                 }
             }
             
+         
             String modelFile = Files.readString(path);
             modelFile = modelFile.replace("#packageName#", namespace);
             modelFile = modelFile.replace("#className#", capitalize(table));
@@ -62,7 +63,7 @@ public class Generation {
             // create
             i_target = i_target.substring(0, i_target.length() - 1);
             i_values = i_values.substring(0, i_values.length() - 1);
-            modelFile = modelFile.replace("#sqlinsert#", "insert into (" + i_target + ") values(" + i_values + ")");
+            modelFile = modelFile.replace("#sqlinsert#", "insert into " + table +"  (" + i_target + ") values(" + i_values + ")");
             modelFile = modelFile.replace("#commandinsert#", create(columns));
 
             // liste
@@ -74,7 +75,7 @@ public class Generation {
 
             // delete
             modelFile = modelFile.replace("#sqldelete#", pk + "=@" + pk);
-            modelFile = modelFile.replace("#commanddelete#", "command.Parameters.AddWithValue(\"@"+ pk +"\", "+ pk +");");
+            modelFile = modelFile.replace("#commanddelete#", "command.Parameters.AddWithValue(\"@"+ pk +"\", id);");
 
             // foreign key 
             String fk_function = "";
