@@ -111,7 +111,7 @@ namespace #packageName#{
 
 private string getTypeAttribut(string col)
 	{
-        Type type = typeof(Employe);
+        Type type = typeof(#className#);
         PropertyInfo[] properties = type.GetProperties();
 		foreach (PropertyInfo property in properties)
 		{
