@@ -16,8 +16,8 @@ public class Generation {
     private static String tableName = null;
     private static boolean action;
     private static String pckg = null;
-    static Path path = Paths.get("model/model.tpl");
-    static Path cs = Paths.get("model/cs.mdl");
+    static Path path = Paths.get("templates/model.tpl");
+    static Path cs = Paths.get("templates/cs.mdl");
 
     private static List<Column> generateModel(String packageName, String table, boolean isCrud){   
         String namespace = getProjectName().concat(".Models");
@@ -224,7 +224,7 @@ public class Generation {
     }
 
     private static void generateViewListe(String table, List<Column> columns) throws SQLException{
-        Path path = Paths.get("view/liste.tpl");
+        Path path = Paths.get("templates/liste.tpl");
         String fileName = "Views/".concat(capitalize(table)).concat("/Liste");
         try {
 
@@ -269,7 +269,7 @@ public class Generation {
     }
     
     private static void generateViewCreate(String table, List<Column> columns){
-        Path path = Paths.get("view/create.tpl");
+        Path path = Paths.get("templates/create.tpl");
         String fileName = "Views/".concat(capitalize(table)).concat("/Create");
         try {
             PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat(".cshtml")));
@@ -314,7 +314,7 @@ public class Generation {
 
     private static void generateViewUpdate(String table, List<Column> columns) throws SQLException{
 
-        Path path = Paths.get("view/update.tpl");
+        Path path = Paths.get("templates/update.tpl");
         String fileName = "Views/".concat(capitalize(table)).concat("/Update");
         try {
             PrintWriter writer = new PrintWriter(new FileWriter(fileName.concat(".cshtml")));
@@ -358,7 +358,7 @@ public class Generation {
 
     }
     private static void generateController(String table, List<Column> columns){
-        Path path = Paths.get("controller/cs.tpl");
+        Path path = Paths.get("templates/cs.tpl");
         String namespace = getProjectName().concat(".Controllers");
         String fileName = "Controllers/".concat(capitalize(table));
         String fk_func = "";
