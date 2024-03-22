@@ -8,11 +8,13 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.swing.plaf.nimbus.State;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -158,5 +160,14 @@ public class Database {
         return ret;
     }
 
-
+    public void create_table_user() throws SQLException{
+        Connection co = getConnection();
+        DatabaseMetaData meta = co.getMetaData();
+        ResultSet resultSet = meta.getTables(null, null, "users", new String[] {"TABLE"});
+        if(!resultSet.next()){
+            Statement st = co.createStatement();
+            st.execute("CREATE TABLE users(id SERIAL PRIMARY KEY, email VARCHAR(200) UNIQUE NOT NULL, password VARCHAR(100) NOT NULL)");
+        }
+        co.close();
+    }
 }
