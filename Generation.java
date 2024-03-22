@@ -19,6 +19,48 @@ public class Generation {
     static Path path = Paths.get("templates/model.tpl");
     static Path cs = Paths.get("templates/cs.mdl");
 
+    private static void build_auth(){
+        String v_dir = "Views/Access";
+        var dir = new File(v_dir);
+        dir.mkdirs();
+        try {
+            String file_view = Files.readString(Paths.get("templates/loginview.tpl"));
+            String file_controller = Files.readString(Paths.get("templates/logincontroller.tpl"));
+            String file_model = Files.readString(Paths.get("templates/loginmodel.tpl"));
+            String program = Files.readString(Paths.get("templates/program.tpl"));
+
+            database.create_table_user();
+            String project = getProjectName();
+
+            PrintWriter writer = new PrintWriter(new FileWriter("Controllers/AccessController.cs"));
+            file_controller = file_controller.replace("#project#", project);
+            writer.println(file_controller);
+            writer.close();
+
+            writer = new PrintWriter(new FileWriter("Program.cs"));
+            writer.println(program);
+            writer.close();
+
+            writer = new PrintWriter(new FileWriter("Models/VMLogin.cs"));
+            file_model = file_model.replace("#project#", project);
+            writer.println(file_model);
+            writer.close();
+
+            writer = new PrintWriter(new FileWriter("Views/Access/Login.cshtml"));
+            file_view = file_view.replace("#project#", project);
+            writer.println(file_view);
+            writer.close();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+
+
+    }
+
     private static List<Column> generateModel(String packageName, String table, boolean isCrud){   
         String namespace = getProjectName().concat(".Models");
         if(packageName != null)namespace.concat(".".concat(packageName));
@@ -195,6 +237,7 @@ public class Generation {
     }
 
     private static void generateCrud(String packageName, String table, boolean isCrud){
+        build_auth();
         List<Column> columns = generateModel(packageName, table, true);
         generateController(table, columns);
         generateView(table, columns);
@@ -358,7 +401,7 @@ public class Generation {
 
     }
     private static void generateController(String table, List<Column> columns){
-        Path path = Paths.get("templates/cs.tpl");
+        Path path = Paths.get("templates/controller.tpl");
         String namespace = getProjectName().concat(".Controllers");
         String fileName = "Controllers/".concat(capitalize(table));
         String fk_func = "";
