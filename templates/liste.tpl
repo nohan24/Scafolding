@@ -12,7 +12,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in ViewData["data"] as List<#modelName#>)
+        @foreach (var item in ViewData["data"] as IEnumerable<#modelName#>)
         {
             <tr>
                 #RowColumns#
@@ -21,10 +21,10 @@
     </tbody>
 </table>
 
-@if ((int)ViewData["totalPages"] > 1)
+@if ((int)ViewData["totalItems"] > (int)ViewData["pageSize"])
 {
-    <ul class="pagination">
-        @for (int i = 1; i <= (int)ViewData["totalPages"]; i++)
+    <ul class="pagination" style="display: flex; align-items:center; gap: 5px;">
+        @for (int i = 1; i <= (int)ViewData["links"]; i++)
         {
             <li class="@(i == (int)ViewData["pageNumber"] ? "active" : "")">
                 <a href="@Url.Action("Liste", new { page = i, pageSize = (int)ViewData["pageSize"] })">@i</a>

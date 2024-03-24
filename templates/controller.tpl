@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using #project#.Models;
-using System.Collections.Generic;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace #namespace#{
+    [Authorize]
     public class #modelName#Controller : Controller
     {
         public IActionResult Liste(int page = 1, int pageSize = 10)
@@ -14,6 +15,10 @@ namespace #namespace#{
             ViewData["data"] = paginatedData;
             ViewData["pageNumber"] = page;
             ViewData["pageSize"] = pageSize;
+            var reste = all.Count % pageSize;
+            int quot = all.Count / pageSize;
+            if (reste != 0) quot++;
+            ViewData["links"] = quot;
             ViewData["totalItems"] = all.Count;
             return View();
         }

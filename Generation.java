@@ -28,6 +28,7 @@ public class Generation {
             String file_controller = Files.readString(Paths.get("templates/logincontroller.tpl"));
             String file_model = Files.readString(Paths.get("templates/loginmodel.tpl"));
             String program = Files.readString(Paths.get("templates/program.tpl"));
+            String layout = Files.readString(Paths.get("templates/layout.tpl"));
 
             database.create_table_user();
             String project = getProjectName();
@@ -51,6 +52,10 @@ public class Generation {
             writer.println(file_view);
             writer.close();
 
+            writer = new PrintWriter(new FileWriter("Views/Shared/_Layout.cshtml"));
+            layout = layout.replace("#project#", project);
+            writer.println(layout);
+            writer.close();
 
         } catch (IOException e) {
             e.printStackTrace();

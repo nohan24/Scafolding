@@ -19,6 +19,11 @@ namespace #project#.Controllers
             return View();
         }
 
+        public async Task<IActionResult> Logout(){
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "Access");
+        }
+
         [HttpPost]
         public async Task<IActionResult> Login(VMLogin login)
         {
