@@ -6,13 +6,18 @@ using System.Text;
 namespace #namespace#{
     public class #modelName#Controller : Controller
     {
-        public IActionResult Liste()
+        public IActionResult Liste(int page = 1, int pageSize = 10)
         {
             #modelName# objInstance = new #modelName#();
             List<#modelName#> all = objInstance.getAll();
-            ViewData["data"] = all;
+            var paginatedData = all.Skip((page - 1) * pageSize).Take(pageSize);
+            ViewData["data"] = paginatedData;
+            ViewData["pageNumber"] = page;
+            ViewData["pageSize"] = pageSize;
+            ViewData["totalItems"] = all.Count;
             return View();
         }
+
         
         public IActionResult Create()
         {

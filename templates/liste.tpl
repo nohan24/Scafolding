@@ -21,6 +21,18 @@
     </tbody>
 </table>
 
+@if ((int)ViewData["totalPages"] > 1)
+{
+    <ul class="pagination">
+        @for (int i = 1; i <= (int)ViewData["totalPages"]; i++)
+        {
+            <li class="@(i == (int)ViewData["pageNumber"] ? "active" : "")">
+                <a href="@Url.Action("Liste", new { page = i, pageSize = (int)ViewData["pageSize"] })">@i</a>
+            </li>
+        }
+    </ul>
+}
+
 <form asp-action="Csv" method="get">
     <button type="submit">Télécharger CSV</button>
 </form>
